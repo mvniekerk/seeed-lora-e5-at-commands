@@ -1,11 +1,11 @@
-use super::responses::{LowPowerResponse, VerResponse};
+use super::responses::{LowPowerResponse, VerResponse, OkResponse};
 use crate::NoResponse;
 use atat_derive::AtatCmd;
 
 /// 4.1 AT
 /// Used to test if the communication with the device is working
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("AT", NoResponse, cmd_prefix = "", timeout_ms = 5000)]
+#[at_cmd("AT", OkResponse, cmd_prefix = "", timeout_ms = 5000)]
 pub struct VerifyComIsWorking {}
 
 /// 4.2 VER
@@ -13,6 +13,12 @@ pub struct VerifyComIsWorking {}
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("VER", VerResponse)]
 pub struct FirmwareVersion {}
+
+/// 4.4 RESET
+/// Reset the module
+#[derive(Clone, Debug, AtatCmd)]
+#[at_cmd("RESET", OkResponse)]
+pub struct Reset {}
 
 /// 4.30 LOWPOWER until woken up
 /// Sleep until woken by RX

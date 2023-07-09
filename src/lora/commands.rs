@@ -2,6 +2,7 @@ use super::responses::{
     AbpDevAddrResponse, AdrGetSetResponse, DataRateGetSetResponse, LoRaWANClassGetSetResponse,
     OtaaAppEuiResponse, OtaaDevEuiResponse, PortGetSetResponse,
 };
+use crate::NoResponse;
 use atat_derive::AtatCmd;
 use heapless::String;
 use serde_at::HexStr;
@@ -56,12 +57,6 @@ pub struct OtaaAppEuiSet {
     pub app_eui_text: String<12>,
     pub app_eui: HexStr<u64>,
 }
-
-/// 4.4 RESET
-/// Reset the module
-#[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("RESET", NoResponse)]
-pub struct Reset {}
 
 /// 4.5 MSG
 /// Send unchecked message

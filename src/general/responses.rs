@@ -1,11 +1,16 @@
 use atat_derive::AtatResp;
 use heapless::String;
-use serde_at::HexStr;
 
 /// OK response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct OkResponse {
     pub ok: String<4>,
+}
+
+impl OkResponse {
+    pub fn is_ok(&self) -> bool {
+        self.ok.as_str().eq("OK")
+    }
 }
 
 /// VER response
