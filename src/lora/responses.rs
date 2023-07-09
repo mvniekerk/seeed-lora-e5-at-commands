@@ -32,18 +32,18 @@ pub struct PortGetSetResponse {
 /// ADR get/set response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct AdrGetSetResponse {
-    pub on: String<6>
+    pub on: String<6>,
 }
 
 /// Data rate get/set response
 /// Example return US915 DR0 SF10 BW125K
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct DataRateGetSetResponse {
-    pub rate: String<42>
+    pub rate: String<42>,
 }
 
 /// LoRaWAN class get/set response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct LoRaWANClassGetSetResponse {
-    pub class: String<2>
+    pub class: String<2>,
 }

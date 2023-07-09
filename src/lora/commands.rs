@@ -1,6 +1,6 @@
 use super::responses::{
-    AbpDevAddrResponse, OtaaAppEuiResponse, OtaaDevEuiResponse, PortGetSetResponse, AdrGetSetResponse,
-    DataRateGetSetResponse, LoRaWANClassGetSetResponse
+    AbpDevAddrResponse, AdrGetSetResponse, DataRateGetSetResponse, LoRaWANClassGetSetResponse,
+    OtaaAppEuiResponse, OtaaDevEuiResponse, PortGetSetResponse,
 };
 use atat_derive::AtatCmd;
 use heapless::String;
@@ -150,15 +150,14 @@ pub struct PortSet {
 /// Get ADR function of LoRaWAN module
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("ADR=?", AdrGetSetResponse)]
-pub struct AdrGet {
-}
+pub struct AdrGet {}
 
 /// 4.12 ADR Set
 /// Set ADR function of LoRaWAN module. Either ON or OFF
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("ADR", AdrGetSetResponse)]
 pub struct AdrSet {
-    pub on: String<6>
+    pub on: String<6>,
 }
 
 /// 4.13.1 DR get
@@ -173,15 +172,14 @@ pub struct DataRateGet {}
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("DR", NoResponse)]
 pub struct DataRateSet {
-    pub on: String<8>
+    pub on: String<8>,
 }
 
 /// 4.13.2 DR scheme get
 /// Get the data rate scheme
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("DR=SCHEME", NoResponse)]
-pub struct DataRateSchemeGet {
-}
+pub struct DataRateSchemeGet {}
 
 /// 4.13.2 DR scheme set
 /// Set the data rate scheme
@@ -189,46 +187,41 @@ pub struct DataRateSchemeGet {
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("DR", DataRateGetSetResponse)]
 pub struct DataRateSchemeSet {
-    pub scheme: String<24>
+    pub scheme: String<24>,
 }
 
 /// 4.24 OTAA Join
 /// Join a network using OTAA
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("JOIN", NoResponse)]
-pub struct OtaaJoin {
-}
+pub struct OtaaJoin {}
 
 /// 4.24 OTAA Join force
 /// Force join a network using OTAA
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("JOIN=FORCE", NoResponse)]
-pub struct OtaaJoinForce {
-}
+pub struct OtaaJoinForce {}
 
 /// 4.24.1 OTAA Join at data rate
 /// Join a network using OTAA at a data rate DR0 .. DR15
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("JOIN=FORCE", NoResponse)]
 pub struct OtaaJoinAtDataRate {
-    pub data_rate: String<8>
+    pub data_rate: String<8>,
 }
-
 
 /// 4.24.2 OTAA disable auto join
 /// Disable auto joining
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("JOIN=0", NoResponse)]
-pub struct OtaaAutoJoinDisable {
-}
-
+pub struct OtaaAutoJoinDisable {}
 
 /// 4.24.2 OTAA auto join 0
 /// Setup auto join using its interval as per auto join mode 0
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("JOIN=AUTO, ", NoResponse, cmd_prefix = "" )]
+#[at_cmd("JOIN=AUTO, ", NoResponse, cmd_prefix = "")]
 pub struct OtaaAutoJoinMode0 {
-    pub interval: u32
+    pub interval: u32,
 }
 
 /// 4.24.2 OTAA auto join
@@ -238,11 +231,11 @@ pub struct OtaaAutoJoinMode0 {
 /// If steps is 0, then it is in auto join mode 1
 /// Otherwise, it is in auto join mode 2
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+JOIN=AUTO, ", NoResponse, cmd_prefix = "" )]
+#[at_cmd("+JOIN=AUTO, ", NoResponse, cmd_prefix = "")]
 pub struct OtaaAutoJoinMode {
     pub min_period: u32,
     pub max_period: u32,
-    pub steps: u32
+    pub steps: u32,
 }
 
 /// 4.26 CLASS Get
@@ -256,9 +249,8 @@ pub struct LoRaWANClassGet {}
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("+CLASS", LoRaWANClassGetSetResponse)]
 pub struct LoRaWANClassSet {
-    pub class: String<2>
+    pub class: String<2>,
 }
-
 
 /// 4.26 CLASS Set and save
 /// Set LoRaWAN class (A, B or C) and save config
@@ -266,9 +258,5 @@ pub struct LoRaWANClassSet {
 #[at_cmd("+CLASS", LoRaWANClassGetSetResponse)]
 pub struct LoRaWANClassSetAndSave {
     pub class: String<2>,
-    pub save: String<8>
+    pub save: String<8>,
 }
-
-
-
-

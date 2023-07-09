@@ -1,4 +1,4 @@
-use super::responses::{VerResponse, LowPowerResponse};
+use super::responses::{LowPowerResponse, VerResponse};
 use crate::NoResponse;
 use atat_derive::AtatCmd;
 
@@ -25,21 +25,18 @@ pub struct LowPowerUntilWokenUp {}
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("LOWPOWER", LowPowerResponse)]
 pub struct LowPowerForMilliseconds {
-    pub sleep_for_millis: u32
+    pub sleep_for_millis: u32,
 }
 
 /// 4.30 LOWPOWER deep sleep enable
 /// Enter deep power saving mode
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("LOWPOWER=AUTOON", NoResponse)]
-pub struct LowPowerDeepSleepEnable {
-}
+pub struct LowPowerDeepSleepEnable {}
 
 /// 4.30 LOWPOWER deep sleep disable
 /// Stop deep power saving mode
 /// Needs 4x 0xFF over UART to be first sent
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("LOWPOWER=AUTOOFF", NoResponse)]
-pub struct LowPowerDeepSleepDisable {
-}
-
+pub struct LowPowerDeepSleepDisable {}

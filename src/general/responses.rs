@@ -17,5 +17,5 @@ pub struct VerResponse {
 /// LOWPOWER response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct LowPowerResponse {
-    pub message: String<12>
+    pub message: String<12>,
 }
