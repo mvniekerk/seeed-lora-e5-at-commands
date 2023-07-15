@@ -3,7 +3,20 @@ name = "seeed-lora-e5-at"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Michael van Niekerk <mike@agri-io.co.za>"]
+edition = "2018"
+
+documentation = "https://docs.rs/seed-lora-e5-at"
+repository = "https://github.com/mvniekerk/seeed-lora-e5-at-commands"
+
+description = "AT commands for the Seeed LoRa-E5 module."
+
+license = "MIT/Apache-2.0"
+
+readme = "README.md"
+keywords = ["at", "lora", "no_std", "seeed", "async"]
+
+categories = ["embedded", "hardware-support", "network-programming"]
 
 [dependencies]
 atat = { git = "https://github.com/mvniekerk/atat.git", commit = "ffcc1eb8d8abdc95cf773959dd3de8c970847e7e",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
