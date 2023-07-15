@@ -1,6 +1,19 @@
 use atat_derive::AtatResp;
 use heapless::String;
 use serde_at::HexStr;
+use crate::lora::types::{LoraJoiningStartingStatus, LoraJoiningStatus, LoraMode};
+
+/// MODE Get/Set Response
+#[derive(Debug, Clone, AtatResp, PartialEq)]
+pub struct ModeGetSetResponse {
+    pub mode: String<12>
+}
+
+impl ModeGetSetResponse {
+    pub fn mode(self) -> LoraMode {
+        self.into()
+    }
+}
 
 /// ID ABP DevAddr Get/Set Response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
@@ -35,6 +48,12 @@ pub struct AdrGetSetResponse {
     pub on: String<6>,
 }
 
+impl AdrGetSetResponse {
+    pub fn is_on(&self) -> bool {
+        self.on.as_str().eq("ON")
+    }
+}
+
 /// Data rate get/set response
 /// Example return US915 DR0 SF10 BW125K
 #[derive(Debug, Clone, AtatResp, PartialEq)]
@@ -46,4 +65,80 @@ pub struct DataRateGetSetResponse {
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct LoRaWANClassGetSetResponse {
     pub class: String<2>,
+}
+
+/// AppKey Set response
+#[derive(Debug, Clone, AtatResp, PartialEq)]
+pub struct AppKeySetResponse {
+    pub response: String<30>
+}
+
+/// Join response
+#[derive(Debug, Clone, AtatResp, PartialEq)]
+pub struct LoraOtaaJoinResponse {
+    pub response: String<26>
+}
+
+impl From<LoraOtaaJoinResponse> for LoraJoiningStatus {
+    fn from(value: LoraOtaaJoinResponse) -> Self {
+        match value.response.as_str() {
+            "Starting" => LoraJoiningStatus::Starting(LoraJoiningStartingStatus::Starting),
+            "NORMAL" => LoraJoiningStatus::Starting(LoraJoiningStartingStatus::Normal),
+            "Join failed" => LoraJoiningStatus::Failed,
+            "LoRaWAN modem is busy" => LoraJoiningStatus::Busy,
+            x if x.starts_with("NetId") => {
+                let mut parts = x.split(' ').skip(1);
+                let net_id = parts.next();
+                let dev_addr = parts.skip(1).next();
+                match (net_id, dev_addr) {
+                    (Some(net_id), Some(dev_addr)) => {
+                        let net_id = net_id.into();
+                        let dev_addr = dev_addr.into();
+                        LoraJoiningStatus::Starting(LoraJoiningStartingStatus::Done(net_id, dev_addr))
+                    },
+                    _ => LoraJoiningStatus::Unknown
+                }
+            }
+            _ => LoraJoiningStatus::Unknown
+        }
+    }
+}
+
+/// REPEAT response
+#[derive(Debug, Clone, AtatResp, PartialEq)]
+pub struct RepeatGetSetResponse {
+    pub repeat: u8
+}
+
+/// RETRY response
+#[derive(Debug, Clone, AtatResp, PartialEq)]
+pub struct RetryGetSetResponse {
+    pub retry: u8
+}
+
+/// Max payload length response
+#[derive(Debug, Clone, AtatResp, PartialEq)]
+pub struct MaxPayloadLengthGetResponse {
+    // LEN
+    pub command: String<6>,
+    pub max: u8
+}
+
+/// Uplink/Downlink counter response
+#[derive(Debug, Clone, AtatResp, PartialEq)]
+pub struct UplinkDownlinkCounterGetResponse {
+    // ULDL 4294967295,
+    pub command: String<30>,
+    pub downlink: u32
+}
+
+impl UplinkDownlinkCounterGetResponse {
+    pub fn uplink(&self) -> u32 {
+        let s = self.command.as_str().split(' ').skip(1).next().unwrap();
+        s.parse().unwrap()
+    }
+
+    pub fn downlink(&self) -> u32 {
+        self.downlink
+    }
 }
