@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 authors = ["Michael van Niekerk <mike@agri-io.co.za>"]
-edition = "2018"
 
 documentation = "https://docs.rs/seed-lora-e5-at"
 repository = "https://github.com/mvniekerk/seeed-lora-e5-at-commands"
