@@ -1,16 +1,17 @@
+use core::str::FromStr;
 use heapless::String;
 use crate::lora::commands::LoraClassSet;
 use crate::lora::responses::ModeGetSetResponse;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum LoraMode {
+pub enum LoraJoinMode {
     Test,
     Otaa,
     Abp,
     _Unknown,
 }
 
-impl From<ModeGetSetResponse> for LoraMode {
+impl From<ModeGetSetResponse> for LoraJoinMode {
     fn from(value: ModeGetSetResponse) -> Self {
         match value.mode.as_str() {
             "TEST" => Self::Test,
@@ -21,69 +22,78 @@ impl From<ModeGetSetResponse> for LoraMode {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LoraRegion {
-    EU868,
+    Eu868,
     US915,
-    US915HYBRID,
-    CN779,
-    EU433,
-    AU915,
-    AU915OLD,
-    CN470,
-    AS923,
-    KR920,
-    IN865,
-    RU864,
-    CN470PREQUEL,
-    STE920,
-    JP920,
+    Us915Hybrid,
+    Cn779,
+    Eu433,
+    Au915,
+    Au915Old,
+    Cn470,
+    As923,
+    Kr920,
+    In865,
+    Ru864,
+    Cn470Prequel,
+    Ste920,
+    Jp920,
     Unknown
 }
 
 impl From<LoraRegion> for String<24> {
     fn from(value: LoraRegion) -> Self {
         match value {
-            LoraRegion::EU868 => "EU868".into(),
+            LoraRegion::Eu868 => "EU868".into(),
             LoraRegion::US915 => "US915".into(),
-            LoraRegion::US915HYBRID => "US915HYBRID".into(),
-            LoraRegion::CN779 => "CN779".into(),
-            LoraRegion::EU433 => "EU433".into(),
-            LoraRegion::AU915 => "AU915".into(),
-            LoraRegion::AU915OLD => "AU915OLD".into(),
-            LoraRegion::CN470 => "CN470".into(),
-            LoraRegion::AS923 => "AS923".into(),
-            LoraRegion::KR920 => "KR920".into(),
-            LoraRegion::IN865 => "IN865".into(),
-            LoraRegion::RU864 => "RU864".into(),
-            LoraRegion::CN470PREQUEL => "CN470PREQUEL".into(),
-            LoraRegion::STE920 => "STE920".into(),
-            LoraRegion::JP920 => "JP920".into(),
+            LoraRegion::Us915Hybrid => "US915HYBRID".into(),
+            LoraRegion::Cn779 => "CN779".into(),
+            LoraRegion::Eu433 => "EU433".into(),
+            LoraRegion::Au915 => "AU915".into(),
+            LoraRegion::Au915Old => "AU915OLD".into(),
+            LoraRegion::Cn470 => "CN470".into(),
+            LoraRegion::As923 => "AS923".into(),
+            LoraRegion::Kr920 => "KR920".into(),
+            LoraRegion::In865 => "IN865".into(),
+            LoraRegion::Ru864 => "RU864".into(),
+            LoraRegion::Cn470Prequel => "CN470PREQUEL".into(),
+            LoraRegion::Ste920 => "STE920".into(),
+            LoraRegion::Jp920 => "JP920".into(),
             _ => "UNKNOWN".into()
         }
     }
 }
 
+impl FromStr for LoraRegion {
+
+    type Err = ();
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        let v = match value {
+            "EU868" => LoraRegion::Eu868,
+            "US915" => LoraRegion::US915,
+            "US915HYBRID" => LoraRegion::Us915Hybrid,
+            "CN779" => LoraRegion::Cn779,
+            "EU433" => LoraRegion::Eu433,
+            "AU915" => LoraRegion::Au915,
+            "AU915OLD" => LoraRegion::Au915Old,
+            "CN470" => LoraRegion::Cn470,
+            "AS923" => LoraRegion::As923,
+            "KR920" => LoraRegion::Kr920,
+            "IN865" => LoraRegion::In865,
+            "RU864" => LoraRegion::Ru864,
+            "CN470PREQUEL" => LoraRegion::Cn470Prequel,
+            "STE920" => LoraRegion::Ste920,
+            "JP920" => LoraRegion::Jp920,
+            _ => LoraRegion::Unknown
+        };
+        Ok(v)
+    }
+}
+
 impl From<String<24>> for LoraRegion {
     fn from(value: String<24>) -> Self {
-        match value.as_str() {
-            "EU868" => LoraRegion::EU868,
-            "US915" => LoraRegion::US915,
-            "US915HYBRID" => LoraRegion::US915HYBRID,
-            "CN779" => LoraRegion::CN779,
-            "EU433" => LoraRegion::EU433,
-            "AU915" => LoraRegion::AU915,
-            "AU915OLD" => LoraRegion::AU915OLD,
-            "CN470" => LoraRegion::CN470,
-            "AS923" => LoraRegion::AS923,
-            "KR920" => LoraRegion::KR920,
-            "IN865" => LoraRegion::IN865,
-            "RU864" => LoraRegion::RU864,
-            "CN470PREQUEL" => LoraRegion::CN470PREQUEL,
-            "STE920" => LoraRegion::STE920,
-            "JP920" => LoraRegion::JP920,
-            _ => LoraRegion::EU868
-        }
+        Self::from_str(value.as_str()).unwrap_or(Self::Unknown)
     }
 }
 

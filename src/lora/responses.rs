@@ -1,7 +1,7 @@
 use atat_derive::AtatResp;
 use heapless::String;
 use serde_at::HexStr;
-use crate::lora::types::{LoraJoiningStartingStatus, LoraJoiningStatus, LoraMode};
+use crate::lora::types::{LoraJoiningStartingStatus, LoraJoiningStatus, LoraJoinMode};
 
 /// MODE Get/Set Response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
@@ -10,7 +10,7 @@ pub struct ModeGetSetResponse {
 }
 
 impl ModeGetSetResponse {
-    pub fn mode(self) -> LoraMode {
+    pub fn mode(self) -> LoraJoinMode {
         self.into()
     }
 }
@@ -70,7 +70,8 @@ pub struct LoRaWANClassGetSetResponse {
 /// AppKey Set response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct AppKeySetResponse {
-    pub response: String<30>
+    // APPKEY <32 char> = 41 char = 82 bytes
+    pub response: String<82>
 }
 
 /// Join response

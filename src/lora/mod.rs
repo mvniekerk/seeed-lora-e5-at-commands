@@ -14,22 +14,22 @@ pub mod asynch {
     use embedded_io::asynch::Write;
     use heapless::String;
     use serde_at::HexStr;
-    use crate::lora::types::LoraMode;
+    use crate::lora::types::LoraJoinMode;
 
     static mut CONFIRMED_SENDING: Option<bool> = Some(false);
 
     impl<'a, W: Write, const INGRESS_BUF_SIZE: usize> SeeedLoraE5Client<'a, W, INGRESS_BUF_SIZE> {
-        pub async fn join_mode(&mut self) -> Result<LoraMode, Error> {
+        pub async fn join_mode(&mut self) -> Result<LoraJoinMode, Error> {
             let command = commands::ModeGet {};
             let response = self.client.send(&command).await?;
-            Ok(LoraMode::from(response))
+            Ok(LoraJoinMode::from(response))
         }
 
-        pub async fn join_mode_set(&mut self, mode: LoraMode) -> Result<LoraMode, Error> {
+        pub async fn join_mode_set(&mut self, mode: LoraJoinMode) -> Result<LoraJoinMode, Error> {
             let command = match mode {
-                LoraMode::Otaa => commands::ModeSet::otaa(),
-                LoraMode::Abp => commands::ModeSet::abp(),
-                LoraMode::Test => commands::ModeSet::test(),
+                LoraJoinMode::Otaa => commands::ModeSet::otaa(),
+                LoraJoinMode::Abp => commands::ModeSet::abp(),
+                LoraJoinMode::Test => commands::ModeSet::test(),
                 _ => return Err(Error::Error),
             };
             let response = self.client.send(&command).await?;
@@ -60,7 +60,7 @@ pub mod asynch {
             Ok(response.app_eui.val)
         }
 
-        pub async fn app_key_set(&mut self, app_key: u16) -> Result<(), Error> {
+        pub async fn app_key_set(&mut self, app_key: u128) -> Result<(), Error> {
             let command = commands::AppKeySet::app_key(app_key);
             self.client.send(&command).await?;
             Ok(())

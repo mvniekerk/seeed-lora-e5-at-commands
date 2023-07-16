@@ -304,13 +304,13 @@ pub struct RetrySet {
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("KEY", AppKeySetResponse)]
 pub struct AppKeySet {
-    pub app_key_text: String<12>,
-    pub key: HexStr<u16>,
+    pub app_key_text: String<82>,
+    pub key: HexStr<u128>,
 }
 
 impl AppKeySet {
-    pub fn app_key(app_key: u16) -> Self {
-        let mut key: HexStr<u16> = HexStr::default();
+    pub fn app_key(app_key: u128) -> Self {
+        let mut key: HexStr<u128> = HexStr::default();
         key.val = app_key;
         Self {
             app_key_text: "APP_KEY".into(),
