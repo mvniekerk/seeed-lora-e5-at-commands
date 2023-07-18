@@ -13,7 +13,7 @@ use crate::lora::types::{LoraClass, LoraRegion};
 /// 4.3 ABP DevAddr Get
 /// Get the ABP mode DevAddr
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("ID", AbpDevAddrResponse)]
+#[at_cmd("+ID", AbpDevAddrResponse)]
 pub struct AbpDevAddrGet {
     pub dev_addr_text: String<14>,
 }
@@ -21,7 +21,7 @@ pub struct AbpDevAddrGet {
 /// 4.3 ABP DevAddr Set
 /// Set the ABP DevAddr
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("ID", AbpDevAddrResponse)]
+#[at_cmd("+ID", AbpDevAddrResponse)]
 pub struct AbpDevAddSet {
     pub dev_addr_text: String<14>,
     pub dev_addr: HexStr<u32>,
@@ -30,14 +30,14 @@ pub struct AbpDevAddSet {
 /// 4.3 OTAA DevEUI Get
 /// Get the OTAA DevEUI
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("ID=DevEui", OtaaDevEuiResponse)]
+#[at_cmd("+ID=DevEui", OtaaDevEuiResponse)]
 pub struct DevEuiGet {
 }
 
 /// 4.3 OTAA DevEUI Set
 /// Set the OTAA DevEUI
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("ID", OtaaDevEuiResponse)]
+#[at_cmd("+ID", OtaaDevEuiResponse)]
 pub struct DevEuiSet {
     pub dev_eui_text: String<12>,
     pub dev_eui: HexStr<u64>,
@@ -63,14 +63,14 @@ impl DevEuiSet {
 /// 4.3 OTAA AppEUI Get
 /// Get the OTAA DevEUI
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("ID=AppEui", OtaaAppEuiResponse)]
+#[at_cmd("+ID=AppEui", OtaaAppEuiResponse)]
 pub struct AppEuiGet {
 }
 
 /// 4.3 OTAA AppEUI Set
 /// Set the OTAA AppEUI
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("ID", OtaaAppEuiResponse)]
+#[at_cmd("+ID", OtaaAppEuiResponse)]
 pub struct AppEuiSet {
     pub app_eui_text: String<12>,
     pub app_eui: HexStr<u64>,
@@ -96,7 +96,7 @@ impl AppEuiSet {
 /// 4.5 MSG
 /// Send unchecked message
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("MSG", NoResponse)]
+#[at_cmd("+MSG", NoResponse)]
 pub struct MessageStringUnconfirmed {
     pub message: String<128>,
 }
@@ -105,13 +105,13 @@ pub struct MessageStringUnconfirmed {
 /// Send an empty string message in order to get the
 /// link status.
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("MSG", NoResponse)]
+#[at_cmd("+MSG", NoResponse)]
 pub struct LinkCheck {}
 
 /// 4.6 CMSG
 /// Send a string that needs to be confirmed by the server
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("CMSG", NoResponse)]
+#[at_cmd("+CMSG", NoResponse)]
 pub struct MessageStringConfirmed {
     pub message: String<128>,
 }
@@ -119,7 +119,7 @@ pub struct MessageStringConfirmed {
 /// 4.7 MSGHEX
 /// Send hex format data frame that doesn't need to be confirmed by the server
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("MSGHEX", NoResponse)]
+#[at_cmd("+MSGHEX", NoResponse)]
 pub struct MessageHexUnconfirmed {
     pub message: HexStr<[u8; 256]>,
 }
@@ -127,13 +127,13 @@ pub struct MessageHexUnconfirmed {
 /// 4.7.1 MSGHEX empty
 /// Send server unconfirmed payload with zero length
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("MSGHEX", NoResponse)]
+#[at_cmd("+MSGHEX", NoResponse)]
 pub struct MessageHexUnconfirmedEmpty {}
 
 /// 4.8 CMSGHEX
 /// Send hex format data that needs to be confirmed by the server
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("CMSGHEX", NoResponse)]
+#[at_cmd("+CMSGHEX", NoResponse)]
 pub struct MessageHexConfirmed {
     pub message: HexStr<[u8; 256]>,
 }
@@ -141,13 +141,13 @@ pub struct MessageHexConfirmed {
 /// 4.8.1 CMSGHEX empty
 /// Send server confirmed payload with zero length
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("CMSHEX", NoResponse)]
+#[at_cmd("+CMSGHEX", NoResponse)]
 pub struct MessageHexConfirmedEmpty {}
 
 /// 4.9 PMSG
 /// Send string format propriety LoRaWAN frames
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("PMSG", NoResponse)]
+#[at_cmd("+PMSG", NoResponse)]
 pub struct ProprietyMessageString {
     pub message: String<128>,
 }
@@ -155,7 +155,7 @@ pub struct ProprietyMessageString {
 /// 4.10 PMSGHEX
 /// Send hex format data propriety LoRaWAN frames
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("PMSGHEX", NoResponse)]
+#[at_cmd("+PMSGHEX", NoResponse)]
 pub struct ProprietyMessageHex {
     pub message: HexStr<[u8; 256]>,
 }
@@ -164,14 +164,14 @@ pub struct ProprietyMessageHex {
 /// Get PORT number that is to be used by MSG/CMSG/MSGHEX/CMSGHEX
 /// Range from 1 to 255
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("PORT=?", PortGetSetResponse)]
+#[at_cmd("+PORT=?", PortGetSetResponse)]
 pub struct LoraPortGet {}
 
 /// 4.11 PORT Set
 /// Set PORT number that is to be used by MSG/CMSG/MSGHEX/CMSGHEX
 /// Range from 1 to 255
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("PORT", PortGetSetResponse)]
+#[at_cmd("+PORT", PortGetSetResponse)]
 pub struct LoraPortSet {
     pub port: u8,
 }
@@ -179,13 +179,13 @@ pub struct LoraPortSet {
 /// 4.12 ADR Get
 /// Get ADR function of LoRaWAN module
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("ADR=?", AdrGetSetResponse)]
+#[at_cmd("+ADR=?", AdrGetSetResponse)]
 pub struct LoraAdrGet {}
 
 /// 4.12 ADR Set
 /// Set ADR function of LoRaWAN module. Either ON or OFF
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("ADR", AdrGetSetResponse)]
+#[at_cmd("+ADR", AdrGetSetResponse)]
 pub struct LoraAdrSet {
     pub on: String<6>,
 }
@@ -207,14 +207,14 @@ impl LoraAdrSet {
 /// 4.13.1 DR get
 /// Get the data rate
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("DR", DataRateGetSetResponse)]
+#[at_cmd("+DR", DataRateGetSetResponse)]
 pub struct LoraDrGet {}
 
 /// 4.13.1 DR set
 /// Set the data rate
 /// dr0 .. dr15
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("DR", DataRateGetSetResponse)]
+#[at_cmd("+DR", DataRateGetSetResponse)]
 pub struct LoraDrSet {
     pub data_rate: String<8>,
 }
@@ -249,14 +249,14 @@ impl LoraDrSet {
 /// 4.13.2 DR scheme get
 /// Get the data rate scheme
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("DR=SCHEME", DataRateGetSetResponse)]
+#[at_cmd("+DR=SCHEME", DataRateGetSetResponse)]
 pub struct DataRateSchemeGet {}
 
 /// 4.13.2 DR scheme set
 /// Set the data rate scheme
 /// One of EU868 US915 US915HYBRID CN779 EU433 AU915 AU915OLD CN470 AS923 KR920 IN865 RU864 CN470PREQUEL STE920 JP920
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("DR", DataRateGetSetResponse)]
+#[at_cmd("+DR", DataRateGetSetResponse)]
 pub struct DataRateSchemeSet {
     pub scheme: String<24>,
 }
@@ -272,13 +272,13 @@ impl DataRateSchemeSet {
 /// 4.16 REPT Get
 /// Get the number of repeats for unconfirmed messages
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("REPT=?", RepeatGetSetResponse)]
+#[at_cmd("+REPT=?", RepeatGetSetResponse)]
 pub struct RepeatGet {}
 
 /// 4.16 REPT Set
 /// Set the number of repeats for unconfirmed messages
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("REPT", RepeatGetSetResponse)]
+#[at_cmd("+REPT", RepeatGetSetResponse)]
 pub struct RepeatSet {
     pub repeat: u8,
 }
@@ -287,14 +287,14 @@ pub struct RepeatSet {
 /// Get the number of retries for confirmed messages
 /// Range from 0 to 255
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("RETRY=?", RetryGetSetResponse)]
+#[at_cmd("+RETRY=?", RetryGetSetResponse)]
 pub struct RetryGet {}
 
 /// 4.17 RETRY Set
 /// Set the number of retries for confirmed messages
 /// Range from 0 to 255
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("RETRY", RetryGetSetResponse)]
+#[at_cmd("+RETRY", RetryGetSetResponse)]
 pub struct RetrySet {
     pub retry: u8,
 }
@@ -302,7 +302,7 @@ pub struct RetrySet {
 /// 4.20 KEY App key set
 /// Set the AppKey for OTAA
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("KEY", AppKeySetResponse)]
+#[at_cmd("+KEY", AppKeySetResponse)]
 pub struct AppKeySet {
     pub app_key_text: String<82>,
     pub key: HexStr<u128>,
@@ -313,7 +313,7 @@ impl AppKeySet {
         let mut key: HexStr<u128> = HexStr::default();
         key.val = app_key;
         Self {
-            app_key_text: "APP_KEY".into(),
+            app_key_text: "APPKEY".into(),
             key
         }
     }
@@ -322,13 +322,13 @@ impl AppKeySet {
 /// 4.23 MODE Get
 /// Get the mode (Test, OTAA or ABP)
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("MODE", ModeGetSetResponse)]
+#[at_cmd("+MODE", ModeGetSetResponse)]
 pub struct ModeGet {}
 
 /// 4.23 MODE Set
 /// Set the mode (Test, OTAA or ABP)
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("MODE", ModeGetSetResponse)]
+#[at_cmd("+MODE", ModeGetSetResponse, timeout_ms = 10000, quote_escape_strings=false)]
 pub struct ModeSet {
     pub mode: String<12>
 }
@@ -357,19 +357,19 @@ impl ModeSet {
 /// 4.24 OTAA Join
 /// Join a network using OTAA
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("JOIN", LoraOtaaJoinResponse)]
+#[at_cmd("+JOIN", LoraOtaaJoinResponse)]
 pub struct LoraJoinOtaa {}
 
 /// 4.24 OTAA Join force
 /// Force join a network using OTAA
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("JOIN=FORCE", LoraOtaaJoinResponse)]
+#[at_cmd("+JOIN=FORCE", LoraOtaaJoinResponse)]
 pub struct LoraJoinOtaaForce {}
 
 /// 4.24.1 OTAA Join at data rate
 /// Join a network using OTAA at a data rate DR0 .. DR15
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("JOIN=FORCE", LoraOtaaJoinResponse)]
+#[at_cmd("+JOIN=FORCE", LoraOtaaJoinResponse)]
 pub struct LoraJoinOtaaAtDataRate {
     pub data_rate: String<8>,
 }
@@ -377,13 +377,13 @@ pub struct LoraJoinOtaaAtDataRate {
 /// 4.24.2 OTAA disable auto join
 /// Disable auto joining
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("JOIN=0", LoraOtaaJoinResponse)]
+#[at_cmd("+JOIN=0", LoraOtaaJoinResponse)]
 pub struct LoraAutoJoinOtaaDisable {}
 
 /// 4.24.2 OTAA auto join 0
 /// Setup auto join using its interval as per auto join mode 0
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("JOIN=AUTO, ", LoraOtaaJoinResponse, cmd_prefix = "")]
+#[at_cmd("+JOIN=AUTO, ", LoraOtaaJoinResponse, cmd_prefix = "")]
 pub struct LoraAutoJoinOtaaMode0 {
     pub interval: u32,
 }

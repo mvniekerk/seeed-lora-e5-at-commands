@@ -9,6 +9,7 @@ pub mod asynch {
     use crate::general::commands::{FirmwareVersion, Reset, VerifyComIsWorking};
     use atat::asynch::AtatClient;
     use atat::Error;
+    use defmt::error;
     use embedded_io::asynch::Write;
     use heapless::String;
 
@@ -29,15 +30,19 @@ pub mod asynch {
             Ok(true)
         }
 
-        pub async fn version(&mut self) -> Result<String<256>, Error> {
+        pub async fn version(&mut self) -> Result<(u16, u16, u16), Error> {
             let command = FirmwareVersion {};
             let response = self.client.send(&command).await?;
-            Ok(response.ver)
+            Ok(response.major_minor_patch()?)
         }
 
         pub async fn reset(&mut self) -> Result<(), Error> {
             let command = Reset {};
-            self.client.send(&command).await?;
+            let resp = self.client.send(&command).await;
+            if let Err(e) = resp {
+                error!("Error resetting Seeed LoRa-E5: {:?}", e);
+                return Err(e);
+            }
             Ok(())
         }
     }

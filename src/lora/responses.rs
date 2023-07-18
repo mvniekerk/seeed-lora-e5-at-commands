@@ -6,7 +6,7 @@ use crate::lora::types::{LoraJoiningStartingStatus, LoraJoiningStatus, LoraJoinM
 /// MODE Get/Set Response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct ModeGetSetResponse {
-    pub mode: String<12>
+    pub mode: String<24>
 }
 
 impl ModeGetSetResponse {
@@ -25,14 +25,12 @@ pub struct AbpDevAddrResponse {
 /// ID OTAA DevEui Get/Set Response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct OtaaDevEuiResponse {
-    pub dev_eui_text: String<12>,
     pub dev_eui: HexStr<u64>,
 }
 
 /// ID OTAA AppEui Get/Set Response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct OtaaAppEuiResponse {
-    pub app_eui_text: String<12>,
     pub app_eui: HexStr<u64>,
 }
 

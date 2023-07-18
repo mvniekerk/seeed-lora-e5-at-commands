@@ -112,19 +112,19 @@ async fn client_task(client: AtLoraE5Client<'static>) {
     }
     let mut client = client.unwrap();
     if let Err(e) = client.join_mode_set(LoraJoinMode::Otaa).await {
-        error!("Error setting join mode");
+        error!("Error setting join mode {}", e);
     } else {
         info!("Join mode set to OTAA");
     }
 
     if let Err(e) = client.dev_eui_set(DEV_EUI).await {
-        error!("Error setting dev eui");
+        error!("Error setting dev eui {}", e);
     } else {
         info!("Dev EUI set");
     }
 
     if let Err(e) = client.app_eui_set(0x0).await {
-        error!("Error setting app eui");
+        error!("Error setting app eui {}", e);
     } else {
         info!("App EUI set");
     }

@@ -5,19 +5,19 @@ use atat_derive::AtatCmd;
 /// 4.1 AT
 /// Used to test if the communication with the device is working
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("AT", OkResponse, cmd_prefix = "", timeout_ms = 5000)]
+#[at_cmd("AT", OkResponse, cmd_prefix = "", timeout_ms = 1000)]
 pub struct VerifyComIsWorking {}
 
 /// 4.2 VER
 /// Get the version of the firmware running on the unit
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("VER", VerResponse)]
+#[at_cmd("AT+VER", VerResponse, cmd_prefix = "", timeout_ms = 1000)]
 pub struct FirmwareVersion {}
 
 /// 4.4 RESET
 /// Reset the module
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("RESET", OkResponse)]
+#[at_cmd("+RESET", OkResponse, timeout_ms =  5000)]
 pub struct Reset {}
 
 /// 4.30 LOWPOWER until woken up

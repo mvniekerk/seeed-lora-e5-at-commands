@@ -23,28 +23,75 @@ impl LoraE5Digester {
     pub fn custom_error(buf: &[u8]) -> Result<(&[u8], usize), ParseError> {
         let (_reminder, (head, data, tail)) = branch::alt((
             sequence::tuple((
-                combinator::success(&b""[..]),
+                combinator::recognize(sequence::tuple((
+                    bytes::streaming::take_until(": "),
+                    bytes::streaming::tag(b": "),
+                ))),
                 bytes::streaming::tag(b"ERROR(-1)"),
                 bytes::streaming::tag(b"\r\n"),
             )),
             sequence::tuple((
-                combinator::success(&b""[..]),
-                bytes::streaming::tag(b"ERROR(-2)"),
+                combinator::recognize(sequence::tuple((
+                    bytes::streaming::take_until(": "),
+                    bytes::streaming::tag(b": "),
+                ))),
+                bytes::streaming::tag(b"ERROR(-10)"),
                 bytes::streaming::tag(b"\r\n"),
             )),
             sequence::tuple((
-                combinator::success(&b""[..]),
-                bytes::streaming::tag(b"ERROR(-3)"),
+                combinator::recognize(sequence::tuple((
+                    bytes::streaming::take_until(": "),
+                    bytes::streaming::tag(b": "),
+                ))),
+                bytes::streaming::tag(b"ERROR(-11)"),
                 bytes::streaming::tag(b"\r\n"),
             )),
             sequence::tuple((
-                combinator::success(&b""[..]),
-                bytes::streaming::tag(b"ERROR(-5)"),
+                combinator::recognize(sequence::tuple((
+                    bytes::streaming::take_until(": "),
+                    bytes::streaming::tag(b": "),
+                ))),
+                bytes::streaming::tag(b"ERROR(-12)"),
                 bytes::streaming::tag(b"\r\n"),
             )),
             sequence::tuple((
-                combinator::success(&b""[..]),
-                bytes::streaming::tag(b"ERROR(-7)"),
+                combinator::recognize(sequence::tuple((
+                    bytes::streaming::take_until(": "),
+                    bytes::streaming::tag(b": "),
+                ))),
+                bytes::streaming::tag(b"ERROR(-20)"),
+                bytes::streaming::tag(b"\r\n"),
+            )),
+            sequence::tuple((
+                combinator::recognize(sequence::tuple((
+                    bytes::streaming::take_until(": "),
+                    bytes::streaming::tag(b": "),
+                ))),
+                bytes::streaming::tag(b"ERROR(-21)"),
+                bytes::streaming::tag(b"\r\n"),
+            )),
+            sequence::tuple((
+                combinator::recognize(sequence::tuple((
+                    bytes::streaming::take_until(": "),
+                    bytes::streaming::tag(b": "),
+                ))),
+                bytes::streaming::tag(b"ERROR(-22)"),
+                bytes::streaming::tag(b"\r\n"),
+            )),
+            sequence::tuple((
+                combinator::recognize(sequence::tuple((
+                    bytes::streaming::take_until(": "),
+                    bytes::streaming::tag(b": "),
+                ))),
+                bytes::streaming::tag(b"ERROR(-23)"),
+                bytes::streaming::tag(b"\r\n"),
+            )),
+            sequence::tuple((
+                combinator::recognize(sequence::tuple((
+                    bytes::streaming::take_until(": "),
+                    bytes::streaming::tag(b": "),
+                ))),
+                bytes::streaming::tag(b"ERROR(-24)"),
                 bytes::streaming::tag(b"\r\n"),
             )),
         ))(buf)?;
@@ -77,16 +124,71 @@ impl LoraE5Digester {
             )),
             // +RESET / Startup preamble
             sequence::tuple((
-                combinator::success(&b""[..]),
+                bytes::streaming::tag(b"+RESET: "),
+                bytes::streaming::take_until("\r\n\x00"),
+                bytes::streaming::tag("\r\n\x00"),
+            )),
+            // +VER
+            sequence::tuple((
+                bytes::streaming::tag(b"+VER: "),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
+            )),
+            // +ID
+            sequence::tuple((
                 combinator::recognize(sequence::tuple((
-                    bytes::streaming::tag(b"+ATZ: "),
-                    bytes::streaming::take_while(character::is_alphanumeric),
+                    bytes::streaming::tag(b"+ID: "),
+                    bytes::streaming::take_until(" "),
+                    bytes::streaming::tag(b" "),
                 ))),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
+            )),
+            // +MODE
+            sequence::tuple((
+                bytes::streaming::tag(b"+MODE: "),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
+            )),
+            // +DR
+            sequence::tuple((
+                bytes::streaming::tag(b"+DR: "),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
+            )),
+            // +CLASS
+            sequence::tuple((
+                bytes::streaming::tag(b"+CLASS: "),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
+            )),
+            // +ADR
+            sequence::tuple((
+                bytes::streaming::tag(b"+ADR: "),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
+            )),
+            // +LW
+            sequence::tuple((
+                bytes::streaming::tag(b"+LW: "),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
+            )),
+            // +JOIN
+            sequence::tuple((
+                bytes::streaming::tag(b"+JOIN: "),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
+            )),
+            // +KEY
+            sequence::tuple((
                 combinator::recognize(sequence::tuple((
-                    bytes::streaming::tag("\r\n"),
-                    bytes::streaming::take_until("\r\n"),
-                    bytes::streaming::tag("\r\n"),
+                    bytes::streaming::tag(b"+KEY: "),
+                    bytes::streaming::take_until(" "),
+                    bytes::streaming::tag(b" "),
                 ))),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
             )),
             // Join status
             sequence::tuple((
