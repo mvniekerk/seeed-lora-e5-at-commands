@@ -18,11 +18,9 @@ keywords = ["at", "lora", "no_std", "seeed", "async"]
 categories = ["embedded", "hardware-support", "network-programming"]
 
 [dependencies]
-#atat = { git = "https://github.com/mvniekerk/atat.git", commit = "ffcc1eb8d8abdc95cf773959dd3de8c970847e7e",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
-#atat_derive = { git = "https://github.com/mvniekerk/atat.git", commit = "ffcc1eb8d8abdc95cf773959dd3de8c970847e7e" }
-atat = { path = "../../bushtelegram/atat/atat",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
-atat_derive = { path = "../../bushtelegram/atat/atat_derive" }
-serde_at = { path = "../../bushtelegram/atat/serde_at", default-features=false, features = ["hex_str_arrays"] }
+atat = { git = "https://github.com/mvniekerk/atat.git", commit = "ffcc1eb8d8abdc95cf773959dd3de8c970847e7e",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
+atat_derive = { git = "https://github.com/mvniekerk/atat.git", commit = "ffcc1eb8d8abdc95cf773959dd3de8c970847e7e" }
+serde_at = { git = "https://github.com/mvniekerk/atat.git", commit = "ffcc1eb8d8abdc95cf773959dd3de8c970847e7e", default-features=false, features = ["hex_str_arrays"] }
 nb = { version = "1" }
 heapless = "0.7"
 heapless-bytes = "0.3"
