@@ -6,7 +6,7 @@ use atat::{
 };
 use atat::{
     nom,
-    nom::{branch, bytes, sequence, combinator},
+    nom::{branch, bytes, combinator, sequence},
     DigestResult, Digester, Parser,
 };
 

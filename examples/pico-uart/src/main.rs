@@ -17,14 +17,15 @@ use embassy_rp::uart::{BufferedUart, BufferedUartRx, BufferedUartTx, Config, Par
 use {defmt_rtt as _, panic_probe as _};
 
 use atat::helpers::LossyStr;
-use atat::AtatIngress;
+use atat::{AtatIngress, UrcSubscription};
 use atat::{asynch::Client, Buffers, Ingress};
 use embassy_time::{Duration, Timer};
 use embedded_alloc::Heap;
-use seeed_lora_e5_at::client::asynch::SeeedLoraE5Client;
+use seeed_lora_e5_at::client::asynch::{JoinStatus, SeeedLoraE5Client};
 use seeed_lora_e5_at::digester::LoraE5Digester;
 use seeed_lora_e5_at::lora::types::{LoraClass, LoraJoinMode, LoraJoiningStatus, LoraRegion};
 use seeed_lora_e5_at::urc::URCMessages;
+use atat::AtatUrcChannel;
 
 const APP_KEY: u128 = 0xd65b042878144e038a744359c7cd1f9d;
 const DEV_EUI: u64 = 0x68419fa0f7e74b0d;
@@ -35,7 +36,7 @@ const RX_SIZE: usize = 1044;
 
 // Constants derived from TX_SIZE and RX_SIZE
 const INGRESS_BUF_SIZE: usize = RX_SIZE;
-const URC_SUBSCRIBERS: usize = 0;
+const URC_SUBSCRIBERS: usize = 2;
 const URC_CAPACITY: usize = RX_SIZE * 3;
 
 type AtIngress<'a> =
@@ -77,10 +78,11 @@ async fn main(spawner: Spawner) {
     let digester = LoraE5Digester::default();
     static BUFFERS: Buffers<URCMessages, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS> =
         atat::Buffers::<URCMessages, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>::new();
+    let urc_channel = BUFFERS.urc_channel.subscribe().unwrap();
     let (ingress, client) = BUFFERS.split(tx, digester, config);
 
     unwrap!(spawner.spawn(read_task(ingress, rx)));
-    unwrap!(spawner.spawn(client_task(client)));
+    unwrap!(spawner.spawn(client_task(client, urc_channel, spawner.clone())));
 }
 
 #[embassy_executor::task]
@@ -89,13 +91,15 @@ async fn read_task(mut ingress: AtIngress<'static>, mut rx: BufferedUartRx<'stat
 }
 
 #[embassy_executor::task]
-async fn client_task(client: AtLoraE5Client<'static>) {
-    let client = SeeedLoraE5Client::new(client).await;
+async fn client_task(client: AtLoraE5Client<'static>, urc_channel: UrcSubscription<'static, URCMessages>, spawner: Spawner) {
+
+    let client = SeeedLoraE5Client::new(client, urc_channel).await;
     if let Err(e) = client {
         error!("Error creating client");
         return;
     }
     let mut client = client.unwrap();
+
     if let Err(e) = client.join_mode_set(LoraJoinMode::Otaa).await {
         error!("Error setting join mode {}", e);
     } else {
@@ -162,40 +166,35 @@ async fn client_task(client: AtLoraE5Client<'static>) {
         info!("Started joining OTAA");
     }
 
-    // let mut joined = false;
-    let mut joined = true;
-    // for _i in 0..100 {
-    //     let status = client.lora_join_status().await;
-    //     match status {
-    //         Ok(status) => match status {
-    //             LoraJoiningStatus::Joined => {
-    //                 info!("Joined");
-    //                 joined = true;
-    //                 break;
-    //             }
-    //             LoraJoiningStatus::Joining => {
-    //                 info!("Joining");
-    //             }
-    //             LoraJoiningStatus::JoinFailed => {
-    //                 info!("Join failed");
-    //             }
-    //             LoraJoiningStatus::InAbpModeError => {
-    //                 error!("In ABP mode");
-    //             }
-    //             LoraJoiningStatus::BusyError => {
-    //                 error!("Busy");
-    //             }
-    //             LoraJoiningStatus::Unknown => {
-    //                 error!("Unknown error");
-    //             }
-    //         },
-    //
-    //         Err(e) => {
-    //             error!("Error getting join status");
-    //         }
-    //     }
-    //     Timer::after(Duration::from_secs(1)).await;
-    // }
+    let mut joined = false;
+    // let mut joined = true;
+    for _i in 0..2000 {
+        while let Ok(Some(urc)) = client.handle_urc().await {
+            info!("URC")
+        }
+        let status = client.lora_join_status().await.expect("Should just read");
+        match status {
+            JoinStatus::Success => {
+                info!("Joined");
+                joined = true;
+                break;
+            }
+            JoinStatus::Joining => {
+            }
+            JoinStatus::Failure => {
+                info!("Join failed");
+                break;
+            }
+            JoinStatus::NotJoined => {
+                info!("Join failed");
+                break;
+            }
+            JoinStatus::Unknown => {
+                error!("Unknown error");
+            }
+        }
+        Timer::after(Duration::from_millis(10)).await;
+    }
 
     if !joined {
         error!("Failed to join");

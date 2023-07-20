@@ -2,6 +2,7 @@ use crate::urc::URCMessages;
 use atat::digest::ParseError;
 use atat::helpers::LossyStr;
 use atat::nom::{bytes, sequence};
+#[cfg(feature = "debug")]
 use defmt::info;
 use heapless::String;
 
@@ -35,6 +36,7 @@ impl JoinUrc {
     pub(crate) fn parse(buf: &[u8]) -> Result<Self, ParseError> {
         let (val, _) = sequence::tuple((bytes::streaming::tag("+JOIN: "),))(buf)?;
         let v = LossyStr(val);
+        #[cfg(feature = "debug")]
         info!("+JOIN PARSE: {}", v);
         match core::str::from_utf8(val) {
             Ok(val) => match val {

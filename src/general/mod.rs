@@ -9,6 +9,7 @@ pub mod asynch {
     use crate::general::responses::VerResponse;
     use atat::asynch::AtatClient;
     use atat::Error;
+    #[cfg(feature = "debug")]
     use defmt::error;
     use embedded_io::asynch::Write;
 
@@ -39,6 +40,7 @@ pub mod asynch {
             let command = Reset {};
             let resp = self.client.send(&command).await;
             if let Err(e) = resp {
+                #[cfg(feature = "debug")]
                 error!("Error resetting Seeed LoRa-E5: {:?}", e);
                 return Err(e);
             }

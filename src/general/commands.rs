@@ -3,9 +3,9 @@ use crate::NoResponse;
 use atat::digest::ParseError;
 use atat::{AtatCmd, Error, InternalError};
 use atat_derive::AtatCmd;
+#[cfg(feature = "debug")]
 use defmt::error;
-use heapless::{Vec};
-
+use heapless::Vec;
 
 /// 4.1 AT
 /// Used to test if the communication with the device is working

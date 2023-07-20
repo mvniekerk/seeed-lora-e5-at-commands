@@ -5,7 +5,7 @@ pub mod urc;
 
 #[cfg(feature = "async")]
 pub mod asynch {
-    use crate::client::asynch::SeeedLoraE5Client;
+    use crate::client::asynch::{JoinStatus, SeeedLoraE5Client};
     use crate::lora::types::LoraJoinMode;
     use crate::lora::{
         commands,
@@ -96,16 +96,26 @@ pub mod asynch {
         }
 
         pub async fn lora_join_otaa(&mut self) -> Result<LoraJoiningStatus, Error> {
+            self.join_status.join_status = JoinStatus::Joining;
             let command = commands::LoraJoinOtaa {};
-            let response = self.client.send(&command).await?.response;
+            let response = self
+                .client
+                .send(&command)
+                .await
+                .map_err(|e| {
+                    self.join_status.join_status = JoinStatus::NotJoined;
+                    e
+                })?
+                .response;
             Ok(response.into())
         }
-        //
-        // pub async fn lora_join_status(&mut self) -> Result<LoraJoiningStatus, Error> {
-        //     let command = commands::LoraJoinOtaaStatus {};
-        //     let response = self.client.send(&command).await?;
-        //     Ok(response.into())
-        // }
+
+        pub async fn lora_join_status(&mut self) -> Result<JoinStatus, Error> {
+            Ok(self.join_status.join_status.clone())
+            //     let command = commands::LoraJoinOtaaStatus {};
+            //     let response = self.client.send(&command).await?;
+            //     Ok(response.into())
+        }
 
         // pub async fn auto_join(&mut self) -> Result<bool, Error> {
         //     let command = commands::LoraAutoJoinGet {};
