@@ -9,11 +9,8 @@ use crate::lora::types::{LoraClass, LoraRegion};
 use crate::NoResponse;
 use atat::{AtatCmd, Error, InternalError};
 use atat_derive::AtatCmd;
-use defmt::info;
 use heapless::{String, Vec};
 use serde_at::HexStr;
-
-use atat::nom::{branch, bytes, character, combinator, sequence};
 
 /// 4.3 ABP DevAddr Get
 /// Get the ABP mode DevAddr
@@ -374,7 +371,7 @@ impl AtatCmd<18> for LoraJoinOtaa {
                     response: resp.into(),
                 })
             }
-            Err(err) => Err(Error::Parse),
+            Err(_err) => Err(Error::Parse),
         }
     }
 
@@ -402,9 +399,27 @@ pub struct LoraJoinOtaaAtDataRate {
 
 /// 4.24.2 OTAA disable auto join
 /// Disable auto joining
-#[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+JOIN=0", LoraOtaaAutoJoinResponse)]
+#[derive(Clone, Debug)]
 pub struct LoraAutoJoinOtaaDisable {}
+
+impl AtatCmd<18> for LoraAutoJoinOtaaDisable {
+    type Response = LoraOtaaAutoJoinResponse;
+
+    fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
+        let buf = resp.map_err(|_| Error::Parse)?;
+        let resp = core::str::from_utf8(buf).map_err(|_| Error::Parse)?;
+        Ok(Self::Response {
+            response: resp.into(),
+        })
+    }
+
+    fn as_bytes(&self) -> Vec<u8, 18> {
+        use core::fmt::Write;
+        let mut buf = Vec::new();
+        write!(buf, "AT+JOIN=0\r\n").unwrap();
+        buf
+    }
+}
 
 /// 4.24.2 OTAA auto join 0
 /// Setup auto join using its interval as per auto join mode 0

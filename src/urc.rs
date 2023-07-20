@@ -3,17 +3,12 @@
 //! This is just used internally, but needs to be public for passing [URCMessages] as a generic to
 //! [AtDigester](atat::digest::AtDigester): `AtDigester<URCMessages>`.
 
-use crate::lora::types::LoraRegion;
 use crate::lora::urc::JoinUrc;
 use atat::digest::ParseError;
-#[cfg(feature = "debug")]
-use atat::helpers::LossyStr;
 use atat::{
-    nom::{branch, bytes, character, combinator, sequence},
+    nom::{branch, bytes, combinator, sequence},
     AtatUrc, Parser,
 };
-#[cfg(feature = "debug")]
-use defmt::error;
 
 /// URC definitions, needs to passed as generic of [AtDigester](atat::digest::AtDigester): `AtDigester<URCMessages>`
 #[derive(Debug, PartialEq, Eq, Clone)]

@@ -1,7 +1,7 @@
 use crate::urc::URCMessages;
 use atat::digest::ParseError;
 use atat::helpers::LossyStr;
-use atat::nom::{branch, bytes, character, combinator, sequence};
+use atat::nom::{bytes, sequence};
 use defmt::info;
 use heapless::String;
 
@@ -20,6 +20,7 @@ pub enum JoinUrc {
     Normal,
     Failed,
     JoinedAlready,
+    NetworkJoined,
     Success(String<12>, String<22>),
     Done,
 }
@@ -43,19 +44,12 @@ impl JoinUrc {
                 x if x.starts_with("NORMAL") => Ok(JoinUrc::Normal),
                 x if x.starts_with("Join failed") => Ok(JoinUrc::Failed),
                 x if x.starts_with("Joined already") => Ok(JoinUrc::JoinedAlready),
+                x if x.starts_with("Network joined") => Ok(JoinUrc::NetworkJoined),
                 x if x.starts_with("NetID") => {
-                    let (_, (_, net_id, _, dev_addr)) = sequence::tuple((
-                        bytes::streaming::tag("NetID "),
-                        bytes::streaming::take_until(" "),
-                        bytes::streaming::tag(" DevAddr"),
-                        combinator::success(&b""[..]),
-                    ))(buf)?;
-                    match (core::str::from_utf8(net_id), core::str::from_utf8(dev_addr)) {
-                        (Ok(dev_eui), Ok(app_eui)) => {
-                            Ok(JoinUrc::Success(dev_eui.into(), app_eui.into()))
-                        }
-                        _ => Err(ParseError::NoMatch),
-                    }
+                    let mut s = x.split(" ");
+                    let net_id = s.nth(1).ok_or(ParseError::NoMatch)?;
+                    let dev_addr = s.nth(1).ok_or(ParseError::NoMatch)?;
+                    Ok(JoinUrc::Success(net_id.into(), dev_addr.into()))
                 }
                 x if x.starts_with("Done") => Ok(JoinUrc::Done),
                 _ => Err(ParseError::NoMatch),

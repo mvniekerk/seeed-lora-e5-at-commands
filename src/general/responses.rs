@@ -1,4 +1,3 @@
-use atat::Error;
 use atat_derive::AtatResp;
 use heapless::String;
 

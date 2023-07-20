@@ -1,13 +1,11 @@
 use super::responses::{LowPowerResponse, OkResponse, VerResponse};
 use crate::NoResponse;
 use atat::digest::ParseError;
-use atat::helpers::LossyStr;
 use atat::{AtatCmd, Error, InternalError};
 use atat_derive::AtatCmd;
 use defmt::error;
-use heapless::{String, Vec};
+use heapless::{Vec};
 
-use atat::nom::{branch, bytes, character, sequence};
 
 /// 4.1 AT
 /// Used to test if the communication with the device is working
@@ -28,7 +26,7 @@ impl AtatCmd<16> for FirmwareVersion {
         }
         let buf = resp.unwrap();
         let parse = Self::parse(buf).map_err(|_| Error::Parse);
-        if let Err(e) = parse {
+        if parse.is_err() {
             return Err(Error::Parse);
         }
         let (major, minor, patch) = parse.unwrap();

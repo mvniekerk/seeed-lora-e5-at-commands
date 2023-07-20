@@ -162,7 +162,8 @@ async fn client_task(client: AtLoraE5Client<'static>) {
         info!("Started joining OTAA");
     }
 
-    let mut joined = false;
+    // let mut joined = false;
+    let mut joined = true;
     // for _i in 0..100 {
     //     let status = client.lora_join_status().await;
     //     match status {
@@ -214,7 +215,7 @@ async fn client_task(client: AtLoraE5Client<'static>) {
             Ok(_d) => {
                 info!("Sent bytes");
             }
-            Err(e) => error!("Error sending"),
+            Err(e) => error!("Error sending {}", e),
         }
         for _i in 0..4 {
             let downlink_frame_count_get = client.downlink_frame_count().await;

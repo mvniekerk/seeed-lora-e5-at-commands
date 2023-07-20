@@ -6,15 +6,13 @@ use atat::{
 };
 use atat::{
     nom,
-    nom::{branch, bytes, character, combinator, sequence},
+    nom::{branch, bytes, sequence, combinator},
     DigestResult, Digester, Parser,
 };
 
 use crate::urc::URCMessages;
 #[cfg(feature = "debug")]
 use defmt::{debug, info};
-#[cfg(feature = "debug")]
-use heapless::String;
 
 #[derive(Default)]
 pub struct LoraE5Digester {}
