@@ -1,9 +1,9 @@
+use crate::urc::URCMessages;
 use atat::digest::ParseError;
 use atat::helpers::LossyStr;
 use atat::nom::{branch, bytes, character, combinator, sequence};
 use defmt::info;
 use heapless::String;
-use crate::urc::URCMessages;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum AutoJoin {
@@ -21,7 +21,7 @@ pub enum JoinUrc {
     Failed,
     JoinedAlready,
     Success(String<12>, String<22>),
-    Done
+    Done,
 }
 
 impl From<JoinUrc> for URCMessages {
@@ -32,9 +32,7 @@ impl From<JoinUrc> for URCMessages {
 
 impl JoinUrc {
     pub(crate) fn parse(buf: &[u8]) -> Result<Self, ParseError> {
-        let (val, _) = sequence::tuple((
-            bytes::streaming::tag("+JOIN: "),
-        ))(buf)?;
+        let (val, _) = sequence::tuple((bytes::streaming::tag("+JOIN: "),))(buf)?;
         let v = LossyStr(val);
         info!("+JOIN PARSE: {}", v);
         match core::str::from_utf8(val) {
@@ -58,7 +56,7 @@ impl JoinUrc {
                         }
                         _ => Err(ParseError::NoMatch),
                     }
-                },
+                }
                 x if x.starts_with("Done") => Ok(JoinUrc::Done),
                 _ => Err(ParseError::NoMatch),
             },

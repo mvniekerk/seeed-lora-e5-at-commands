@@ -1,7 +1,7 @@
-use core::str::FromStr;
-use heapless::String;
 use crate::lora::commands::LoraClassSet;
 use crate::lora::responses::ModeGetSetResponse;
+use core::str::FromStr;
+use heapless::String;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LoraJoinMode {
@@ -17,7 +17,7 @@ impl From<ModeGetSetResponse> for LoraJoinMode {
             "TEST" => Self::Test,
             "LWOTAA" => Self::Otaa,
             "LWABP" => Self::Abp,
-            _ => Self::_Unknown
+            _ => Self::_Unknown,
         }
     }
 }
@@ -39,7 +39,7 @@ pub enum LoraRegion {
     Cn470Prequel,
     Ste920,
     Jp920,
-    Unknown
+    Unknown,
 }
 
 impl From<LoraRegion> for String<24> {
@@ -60,13 +60,12 @@ impl From<LoraRegion> for String<24> {
             LoraRegion::Cn470Prequel => "CN470PREQUEL".into(),
             LoraRegion::Ste920 => "STE920".into(),
             LoraRegion::Jp920 => "JP920".into(),
-            _ => "UNKNOWN".into()
+            _ => "UNKNOWN".into(),
         }
     }
 }
 
 impl FromStr for LoraRegion {
-
     type Err = ();
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         let v = match value {
@@ -85,7 +84,7 @@ impl FromStr for LoraRegion {
             "CN470PREQUEL" => LoraRegion::Cn470Prequel,
             "STE920" => LoraRegion::Ste920,
             "JP920" => LoraRegion::Jp920,
-            _ => LoraRegion::Unknown
+            _ => LoraRegion::Unknown,
         };
         Ok(v)
     }
@@ -137,7 +136,7 @@ impl LoraClass {
 pub enum LoraJoiningStartingStatus {
     Starting,
     Normal,
-    Done(String<12>, String<22>)
+    Done(String<12>, String<22>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -145,5 +144,5 @@ pub enum LoraJoiningStatus {
     Starting(LoraJoiningStartingStatus),
     Failed,
     Busy,
-    Unknown
+    Unknown,
 }

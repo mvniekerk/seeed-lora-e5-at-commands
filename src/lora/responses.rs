@@ -1,12 +1,12 @@
+use crate::lora::types::{LoraJoinMode, LoraJoiningStartingStatus, LoraJoiningStatus};
 use atat_derive::AtatResp;
 use heapless::String;
 use serde_at::HexStr;
-use crate::lora::types::{LoraJoiningStartingStatus, LoraJoiningStatus, LoraJoinMode};
 
 /// MODE Get/Set Response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct ModeGetSetResponse {
-    pub mode: String<24>
+    pub mode: String<24>,
 }
 
 impl ModeGetSetResponse {
@@ -69,19 +69,19 @@ pub struct LoRaWANClassGetSetResponse {
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct AppKeySetResponse {
     // APPKEY <32 char> = 41 char = 82 bytes
-    pub response: String<82>
+    pub response: String<82>,
 }
 
 /// Join response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct LoraOtaaJoinResponse {
-    pub response: String<26>
+    pub response: String<26>,
 }
 
 /// Auto join response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct LoraOtaaAutoJoinResponse {
-    pub response: String<26>
+    pub response: String<26>,
 }
 
 impl From<String<26>> for LoraJoiningStatus {
@@ -99,12 +99,14 @@ impl From<String<26>> for LoraJoiningStatus {
                     (Some(net_id), Some(dev_addr)) => {
                         let net_id = net_id.into();
                         let dev_addr = dev_addr.into();
-                        LoraJoiningStatus::Starting(LoraJoiningStartingStatus::Done(net_id, dev_addr))
-                    },
-                    _ => LoraJoiningStatus::Unknown
+                        LoraJoiningStatus::Starting(LoraJoiningStartingStatus::Done(
+                            net_id, dev_addr,
+                        ))
+                    }
+                    _ => LoraJoiningStatus::Unknown,
                 }
             }
-            _ => LoraJoiningStatus::Unknown
+            _ => LoraJoiningStatus::Unknown,
         }
     }
 }
@@ -112,13 +114,13 @@ impl From<String<26>> for LoraJoiningStatus {
 /// REPEAT response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct RepeatGetSetResponse {
-    pub repeat: u8
+    pub repeat: u8,
 }
 
 /// RETRY response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct RetryGetSetResponse {
-    pub retry: u8
+    pub retry: u8,
 }
 
 /// Max payload length response
@@ -126,7 +128,7 @@ pub struct RetryGetSetResponse {
 pub struct MaxPayloadLengthGetResponse {
     // LEN
     pub command: String<6>,
-    pub max: u8
+    pub max: u8,
 }
 
 /// Uplink/Downlink counter response
@@ -134,7 +136,7 @@ pub struct MaxPayloadLengthGetResponse {
 pub struct UplinkDownlinkCounterGetResponse {
     // ULDL 4294967295,
     pub command: String<30>,
-    pub downlink: u32
+    pub downlink: u32,
 }
 
 impl UplinkDownlinkCounterGetResponse {

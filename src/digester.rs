@@ -144,6 +144,12 @@ impl LoraE5Digester {
                 bytes::streaming::take_until("\r\n"),
                 bytes::streaming::tag("\r\n"),
             )),
+            // +VER
+            sequence::tuple((
+                bytes::streaming::tag(b"+VER: "),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
+            )),
             // +DR
             sequence::tuple((
                 bytes::streaming::tag(b"+DR: "),

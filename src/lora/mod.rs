@@ -6,6 +6,7 @@ pub mod urc;
 #[cfg(feature = "async")]
 pub mod asynch {
     use crate::client::asynch::SeeedLoraE5Client;
+    use crate::lora::types::LoraJoinMode;
     use crate::lora::{
         commands,
         types::{LoraClass, LoraJoiningStatus, LoraRegion},
@@ -15,7 +16,6 @@ pub mod asynch {
     use embedded_io::asynch::Write;
     use heapless::String;
     use serde_at::HexStr;
-    use crate::lora::types::LoraJoinMode;
 
     static mut CONFIRMED_SENDING: Option<bool> = Some(false);
 
@@ -113,7 +113,11 @@ pub mod asynch {
         //     Ok(response.is_on())
         // }
 
-        pub async fn auto_join_set(&mut self, is_on: bool, interval: u32) -> Result<String<26>, Error> {
+        pub async fn auto_join_set(
+            &mut self,
+            is_on: bool,
+            interval: u32,
+        ) -> Result<String<26>, Error> {
             let response = if is_on {
                 let command = commands::LoraAutoJoinOtaaMode0 { interval };
                 self.client.send(&command).await?
@@ -165,20 +169,20 @@ pub mod asynch {
             let _response = self.client.send(&port_set).await?;
             match self.confirm_send().await? {
                 true => {
-                    let retry = commands::RetrySet { retry: retransmission_times };
-                    let _response = self.client.send(&retry).await?;
-                    let command = commands::MessageHexConfirmed {
-                        message
+                    let retry = commands::RetrySet {
+                        retry: retransmission_times,
                     };
+                    let _response = self.client.send(&retry).await?;
+                    let command = commands::MessageHexConfirmed { message };
                     let _response = self.client.send(&command).await?;
                     Ok(())
-                },
+                }
                 false => {
-                    let repeat = commands::RepeatSet { repeat: retransmission_times };
-                    let _response = self.client.send(&repeat).await?;
-                    let command = commands::MessageHexUnconfirmed {
-                        message
+                    let repeat = commands::RepeatSet {
+                        repeat: retransmission_times,
                     };
+                    let _response = self.client.send(&repeat).await?;
+                    let command = commands::MessageHexUnconfirmed { message };
                     let _response = self.client.send(&command).await?;
                     Ok(())
                 }

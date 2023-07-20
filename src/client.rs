@@ -1,5 +1,6 @@
 #[cfg(feature = "async")]
 pub mod asynch {
+    use crate::general::responses::VerResponse;
     pub use atat::asynch::Client;
     use atat::Error;
     use defmt::{error, info, warn};
@@ -26,7 +27,14 @@ pub mod asynch {
             let version = s.version().await;
             match version {
                 Err(e) => error!("Error getting Seeed LoRa-E5 firmware version: {:?}", e),
-                Ok((major, minor, patch)) => info!("Seeed LoRa-E5 firmware version: {}.{}.{}", major, minor, patch),
+                Ok(VerResponse {
+                    major,
+                    minor,
+                    patch,
+                }) => info!(
+                    "Seeed LoRa-E5 firmware version: {}.{}.{}",
+                    major, minor, patch
+                ),
             }
             Ok(s)
         }

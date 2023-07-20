@@ -1,16 +1,19 @@
-use atat::{AtatCmd, Error, InternalError};
 use super::responses::{
-    AbpDevAddrResponse, AdrGetSetResponse, DataRateGetSetResponse, LoRaWANClassGetSetResponse,
-    OtaaAppEuiResponse, OtaaDevEuiResponse, PortGetSetResponse, ModeGetSetResponse, AppKeySetResponse,
-    LoraOtaaJoinResponse, RetryGetSetResponse, RepeatGetSetResponse, MaxPayloadLengthGetResponse,
-    UplinkDownlinkCounterGetResponse,LoraOtaaAutoJoinResponse
+    AbpDevAddrResponse, AdrGetSetResponse, AppKeySetResponse, DataRateGetSetResponse,
+    LoRaWANClassGetSetResponse, LoraOtaaAutoJoinResponse, LoraOtaaJoinResponse,
+    MaxPayloadLengthGetResponse, ModeGetSetResponse, OtaaAppEuiResponse, OtaaDevEuiResponse,
+    PortGetSetResponse, RepeatGetSetResponse, RetryGetSetResponse,
+    UplinkDownlinkCounterGetResponse,
 };
+use crate::lora::types::{LoraClass, LoraRegion};
 use crate::NoResponse;
+use atat::{AtatCmd, Error, InternalError};
 use atat_derive::AtatCmd;
 use defmt::info;
 use heapless::{String, Vec};
 use serde_at::HexStr;
-use crate::lora::types::{LoraClass, LoraRegion};
+
+use atat::nom::{branch, bytes, character, combinator, sequence};
 
 /// 4.3 ABP DevAddr Get
 /// Get the ABP mode DevAddr
@@ -33,8 +36,7 @@ pub struct AbpDevAddSet {
 /// Get the OTAA DevEUI
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("+ID=DevEui", OtaaDevEuiResponse)]
-pub struct DevEuiGet {
-}
+pub struct DevEuiGet {}
 
 /// 4.3 OTAA DevEUI Set
 /// Set the OTAA DevEUI
@@ -57,7 +59,7 @@ impl DevEuiSet {
         };
         Self {
             dev_eui_text: String::from("DevEui"),
-            dev_eui
+            dev_eui,
         }
     }
 }
@@ -66,8 +68,7 @@ impl DevEuiSet {
 /// Get the OTAA DevEUI
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("+ID=AppEui", OtaaAppEuiResponse)]
-pub struct AppEuiGet {
-}
+pub struct AppEuiGet {}
 
 /// 4.3 OTAA AppEUI Set
 /// Set the OTAA AppEUI
@@ -90,7 +91,7 @@ impl AppEuiSet {
         };
         Self {
             app_eui_text: String::from("AppEui"),
-            app_eui
+            app_eui,
         }
     }
 }
@@ -194,15 +195,11 @@ pub struct LoraAdrSet {
 
 impl LoraAdrSet {
     pub fn on() -> Self {
-        Self {
-            on: "ON".into(),
-        }
+        Self { on: "ON".into() }
     }
 
     pub fn off() -> Self {
-        Self {
-            on: "OFF".into(),
-        }
+        Self { on: "OFF".into() }
     }
 }
 
@@ -243,7 +240,7 @@ impl LoraDrSet {
             _ => panic!("Invalid data rate"),
         };
         Self {
-            data_rate: dr.into()
+            data_rate: dr.into(),
         }
     }
 }
@@ -266,7 +263,7 @@ pub struct DataRateSchemeSet {
 impl DataRateSchemeSet {
     pub fn region(region: LoraRegion) -> Self {
         Self {
-            scheme: region.into()
+            scheme: region.into(),
         }
     }
 }
@@ -316,7 +313,7 @@ impl AppKeySet {
         key.val = app_key;
         Self {
             app_key_text: "APPKEY".into(),
-            key
+            key,
         }
     }
 }
@@ -330,37 +327,39 @@ pub struct ModeGet {}
 /// 4.23 MODE Set
 /// Set the mode (Test, OTAA or ABP)
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+MODE", ModeGetSetResponse, timeout_ms = 10000, quote_escape_strings=false)]
+#[at_cmd(
+    "+MODE",
+    ModeGetSetResponse,
+    timeout_ms = 10000,
+    quote_escape_strings = false
+)]
 pub struct ModeSet {
-    pub mode: String<12>
+    pub mode: String<12>,
 }
 
 impl ModeSet {
     pub fn otaa() -> Self {
         Self {
-            mode: String::from("LWOTAA")
+            mode: String::from("LWOTAA"),
         }
     }
 
     pub fn abp() -> Self {
         Self {
-            mode: String::from("LWABP")
+            mode: String::from("LWABP"),
         }
     }
 
     pub fn test() -> Self {
         Self {
-            mode: String::from("TEST")
+            mode: String::from("TEST"),
         }
     }
 }
 
-
 /// 4.24 OTAA Join
 /// Join a network using OTAA
 #[derive(Clone, Debug)]
-// #[derive(Clone, Debug, AtatCmd)]
-// #[at_cmd("+JOIN", LoraOtaaJoinResponse)]
 pub struct LoraJoinOtaa {}
 impl AtatCmd<18> for LoraJoinOtaa {
     type Response = LoraOtaaJoinResponse;
@@ -371,12 +370,11 @@ impl AtatCmd<18> for LoraJoinOtaa {
         match resp {
             Ok(resp) => {
                 let resp = core::str::from_utf8(resp).map_err(|_| Error::Parse)?;
-                info!("Lora Join Response: {}", resp);
                 Ok(Self::Response {
-                    response: resp.into()
+                    response: resp.into(),
                 })
-            },
-            Err(err) => Err(Error::Parse)
+            }
+            Err(err) => Err(Error::Parse),
         }
     }
 
@@ -386,7 +384,7 @@ impl AtatCmd<18> for LoraJoinOtaa {
         write!(buf, "AT+JOIN\r\n").unwrap();
         buf
     }
-} 
+}
 
 /// 4.24 OTAA Join force
 /// Force join a network using OTAA
@@ -477,7 +475,7 @@ pub struct LoraClassSet {
 impl LoraClassSet {
     pub fn class(class: LoraClass) -> Self {
         Self {
-            class: class.into()
+            class: class.into(),
         }
     }
 }
@@ -497,13 +495,13 @@ pub struct LoraClassSetAndSave {
 #[at_cmd("+LW", UplinkDownlinkCounterGetResponse)]
 pub struct LoraUplinkDownlinkCounterGet {
     // ULDL
-    pub command: String<4>
+    pub command: String<4>,
 }
 
 impl Default for LoraUplinkDownlinkCounterGet {
     fn default() -> Self {
         Self {
-            command: String::from("ULDL")
+            command: String::from("ULDL"),
         }
     }
 }
@@ -514,15 +512,13 @@ impl Default for LoraUplinkDownlinkCounterGet {
 #[at_cmd("+LW", MaxPayloadLengthGetResponse)]
 pub struct LoraMaxTxLengthGet {
     // LEN
-    pub command: String<6>
+    pub command: String<6>,
 }
 
 impl Default for LoraMaxTxLengthGet {
     fn default() -> Self {
         Self {
-            command: String::from("LEN")
+            command: String::from("LEN"),
         }
     }
 }
-
-

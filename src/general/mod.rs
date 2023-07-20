@@ -2,11 +2,11 @@ pub mod commands;
 pub mod responses;
 pub mod types;
 
-
 #[cfg(feature = "async")]
 pub mod asynch {
-    use crate::client::asynch::{SeeedLoraE5Client};
+    use crate::client::asynch::SeeedLoraE5Client;
     use crate::general::commands::{FirmwareVersion, Reset, VerifyComIsWorking};
+    use crate::general::responses::VerResponse;
     use atat::asynch::AtatClient;
     use atat::Error;
     use defmt::error;
@@ -30,10 +30,10 @@ pub mod asynch {
             Ok(true)
         }
 
-        pub async fn version(&mut self) -> Result<(u16, u16, u16), Error> {
+        pub async fn version(&mut self) -> Result<VerResponse, Error> {
             let command = FirmwareVersion {};
             let response = self.client.send(&command).await?;
-            Ok(response.major_minor_patch()?)
+            Ok(response)
         }
 
         pub async fn reset(&mut self) -> Result<(), Error> {
