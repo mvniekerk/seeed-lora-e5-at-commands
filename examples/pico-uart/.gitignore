@@ -2,4 +2,4 @@
 /Cargo.lock
 .idea/
 *.iml
-./hwtest.map
+hwtest.map
