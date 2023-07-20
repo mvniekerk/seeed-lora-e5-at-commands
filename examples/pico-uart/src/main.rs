@@ -16,15 +16,15 @@ use embassy_rp::uart::DataBits::DataBits8;
 use embassy_rp::uart::{BufferedUart, BufferedUartRx, BufferedUartTx, Config, Parity, StopBits};
 use {defmt_rtt as _, panic_probe as _};
 
+use atat::helpers::LossyStr;
 use atat::AtatIngress;
 use atat::{asynch::Client, Buffers, Ingress};
-use atat::helpers::LossyStr;
 use embassy_time::{Duration, Timer};
 use embedded_alloc::Heap;
+use seeed_lora_e5_at::client::asynch::SeeedLoraE5Client;
 use seeed_lora_e5_at::digester::LoraE5Digester;
-use seeed_lora_e5_at::lora::types::{LoraJoiningStatus, LoraRegion, LoraClass, LoraJoinMode};
+use seeed_lora_e5_at::lora::types::{LoraClass, LoraJoinMode, LoraJoiningStatus, LoraRegion};
 use seeed_lora_e5_at::urc::URCMessages;
-use seeed_lora_e5_at::client::asynch::{SeeedLoraE5Client};
 
 const APP_KEY: u128 = 0xd65b042878144e038a744359c7cd1f9d;
 const DEV_EUI: u64 = 0x68419fa0f7e74b0d;
@@ -38,14 +38,8 @@ const INGRESS_BUF_SIZE: usize = RX_SIZE;
 const URC_SUBSCRIBERS: usize = 0;
 const URC_CAPACITY: usize = RX_SIZE * 3;
 
-type AtIngress<'a> = Ingress<
-    'a,
-    LoraE5Digester,
-    URCMessages,
-    INGRESS_BUF_SIZE,
-    URC_CAPACITY,
-    URC_SUBSCRIBERS,
->;
+type AtIngress<'a> =
+    Ingress<'a, LoraE5Digester, URCMessages, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>;
 
 type AtLoraE5Client<'a> = Client<'a, BufferedUartTx<'a, UART1>, INGRESS_BUF_SIZE>;
 
@@ -81,17 +75,8 @@ async fn main(spawner: Spawner) {
         .tx_timeout(Duration::from_millis(2000));
 
     let digester = LoraE5Digester::default();
-    static BUFFERS: Buffers<
-        URCMessages,
-        INGRESS_BUF_SIZE,
-        URC_CAPACITY,
-        URC_SUBSCRIBERS,
-    > = atat::Buffers::<
-        URCMessages,
-        INGRESS_BUF_SIZE,
-        URC_CAPACITY,
-        URC_SUBSCRIBERS,
-    >::new();
+    static BUFFERS: Buffers<URCMessages, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS> =
+        atat::Buffers::<URCMessages, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>::new();
     let (ingress, client) = BUFFERS.split(tx, digester, config);
 
     unwrap!(spawner.spawn(read_task(ingress, rx)));
@@ -129,10 +114,7 @@ async fn client_task(client: AtLoraE5Client<'static>) {
         info!("App EUI set");
     }
 
-    if let Err(e) = client
-        .app_key_set(APP_KEY)
-        .await
-    {
+    if let Err(e) = client.app_key_set(APP_KEY).await {
         error!("Error setting app key");
     } else {
         info!("App key set");
@@ -238,24 +220,27 @@ async fn client_task(client: AtLoraE5Client<'static>) {
             let downlink_frame_count_get = client.downlink_frame_count().await;
             if let Ok(downlink_frame_count_get) = downlink_frame_count_get {
                 if downlink_frame_count_get != downlink_frame_count {
-                    info!("Downlink frame count changed: {:?}", downlink_frame_count_get);
+                    info!(
+                        "Downlink frame count changed: {:?}",
+                        downlink_frame_count_get
+                    );
                     downlink_frame_count = downlink_frame_count_get;
                     let recv = client.receive().await;
                     match recv {
                         Ok(recv) => {
                             // match recv {
-                                // LoraReceivedBytes::None => {
-                                //     info!("No bytes received");
-                                // },
-                                // LoraReceivedBytes::Data(data) => {
-                                //     info!("Received {:?} bytes, {:?} RSSI, {:?} SNR, {:?} PORT", data.length, data.rssi, data.snr, data.port);
-                                //     let bytes = *data.data;
-                                //     let l = core::str::from_utf8(&bytes[0..(data.length as usize)]).unwrap();
-                                //     info!("Bytes as string: {:?}", l);
-                                // }
-                                // LoraReceivedBytes::Ack(ack) => {
-                                //     info!("Received ACK, {:?} RSSI, {:?} SNR", ack.rssi, ack.snr);
-                                // }
+                            // LoraReceivedBytes::None => {
+                            //     info!("No bytes received");
+                            // },
+                            // LoraReceivedBytes::Data(data) => {
+                            //     info!("Received {:?} bytes, {:?} RSSI, {:?} SNR, {:?} PORT", data.length, data.rssi, data.snr, data.port);
+                            //     let bytes = *data.data;
+                            //     let l = core::str::from_utf8(&bytes[0..(data.length as usize)]).unwrap();
+                            //     info!("Bytes as string: {:?}", l);
+                            // }
+                            // LoraReceivedBytes::Ack(ack) => {
+                            //     info!("Received ACK, {:?} RSSI, {:?} SNR", ack.rssi, ack.snr);
+                            // }
                             // }
                         }
                         Err(e) => error!("Error receiving"),
