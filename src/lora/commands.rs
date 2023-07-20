@@ -1,12 +1,14 @@
+use atat::{AtatCmd, Error, InternalError};
 use super::responses::{
     AbpDevAddrResponse, AdrGetSetResponse, DataRateGetSetResponse, LoRaWANClassGetSetResponse,
     OtaaAppEuiResponse, OtaaDevEuiResponse, PortGetSetResponse, ModeGetSetResponse, AppKeySetResponse,
     LoraOtaaJoinResponse, RetryGetSetResponse, RepeatGetSetResponse, MaxPayloadLengthGetResponse,
-    UplinkDownlinkCounterGetResponse
+    UplinkDownlinkCounterGetResponse,LoraOtaaAutoJoinResponse
 };
 use crate::NoResponse;
 use atat_derive::AtatCmd;
-use heapless::String;
+use defmt::info;
+use heapless::{String, Vec};
 use serde_at::HexStr;
 use crate::lora::types::{LoraClass, LoraRegion};
 
@@ -356,9 +358,35 @@ impl ModeSet {
 
 /// 4.24 OTAA Join
 /// Join a network using OTAA
-#[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+JOIN", LoraOtaaJoinResponse)]
+#[derive(Clone, Debug)]
+// #[derive(Clone, Debug, AtatCmd)]
+// #[at_cmd("+JOIN", LoraOtaaJoinResponse)]
 pub struct LoraJoinOtaa {}
+impl AtatCmd<18> for LoraJoinOtaa {
+    type Response = LoraOtaaJoinResponse;
+
+    const MAX_TIMEOUT_MS: u32 = 10000;
+
+    fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
+        match resp {
+            Ok(resp) => {
+                let resp = core::str::from_utf8(resp).map_err(|_| Error::Parse)?;
+                info!("Lora Join Response: {}", resp);
+                Ok(Self::Response {
+                    response: resp.into()
+                })
+            },
+            Err(err) => Err(Error::Parse)
+        }
+    }
+
+    fn as_bytes(&self) -> Vec<u8, 18> {
+        use core::fmt::Write;
+        let mut buf = Vec::new();
+        write!(buf, "AT+JOIN\r\n").unwrap();
+        buf
+    }
+} 
 
 /// 4.24 OTAA Join force
 /// Force join a network using OTAA
@@ -377,13 +405,13 @@ pub struct LoraJoinOtaaAtDataRate {
 /// 4.24.2 OTAA disable auto join
 /// Disable auto joining
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+JOIN=0", LoraOtaaJoinResponse)]
+#[at_cmd("+JOIN=0", LoraOtaaAutoJoinResponse)]
 pub struct LoraAutoJoinOtaaDisable {}
 
 /// 4.24.2 OTAA auto join 0
 /// Setup auto join using its interval as per auto join mode 0
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+JOIN=AUTO, ", LoraOtaaJoinResponse, cmd_prefix = "")]
+#[at_cmd("+JOIN=AUTO, ", LoraOtaaAutoJoinResponse, cmd_prefix = "")]
 pub struct LoraAutoJoinOtaaMode0 {
     pub interval: u32,
 }
@@ -395,11 +423,41 @@ pub struct LoraAutoJoinOtaaMode0 {
 /// If steps is 0, then it is in auto join mode 1
 /// Otherwise, it is in auto join mode 2
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+JOIN=AUTO, ", LoraOtaaJoinResponse, cmd_prefix = "")]
+#[at_cmd("+JOIN", LoraOtaaAutoJoinResponse)]
 pub struct LoraAutoJoinOtaaMode {
+    pub cmd: String<8>,
     pub min_period: u32,
     pub max_period: u32,
     pub steps: u32,
+}
+
+impl LoraAutoJoinOtaaMode {
+    pub fn mode0(min_period: u32) -> Self {
+        Self {
+            cmd: String::from("AUTO"),
+            min_period,
+            max_period: 0,
+            steps: 0,
+        }
+    }
+
+    pub fn mode1(min_period: u32, max_period: u32) -> Self {
+        Self {
+            cmd: String::from("AUTO"),
+            min_period,
+            max_period,
+            steps: 0,
+        }
+    }
+
+    pub fn mode2(min_period: u32, max_period: u32, steps: u32) -> Self {
+        Self {
+            cmd: String::from("AUTO"),
+            min_period,
+            max_period,
+            steps,
+        }
+    }
 }
 
 /// 4.26 CLASS Get

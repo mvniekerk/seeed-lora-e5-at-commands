@@ -78,9 +78,15 @@ pub struct LoraOtaaJoinResponse {
     pub response: String<26>
 }
 
-impl From<LoraOtaaJoinResponse> for LoraJoiningStatus {
-    fn from(value: LoraOtaaJoinResponse) -> Self {
-        match value.response.as_str() {
+/// Auto join response
+#[derive(Debug, Clone, AtatResp, PartialEq)]
+pub struct LoraOtaaAutoJoinResponse {
+    pub response: String<26>
+}
+
+impl From<String<26>> for LoraJoiningStatus {
+    fn from(value: String<26>) -> Self {
+        match value.as_str() {
             "Starting" => LoraJoiningStatus::Starting(LoraJoiningStartingStatus::Starting),
             "NORMAL" => LoraJoiningStatus::Starting(LoraJoiningStartingStatus::Normal),
             "Join failed" => LoraJoiningStatus::Failed,

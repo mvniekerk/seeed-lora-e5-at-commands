@@ -1,6 +1,7 @@
 pub mod commands;
 pub mod responses;
 pub mod types;
+pub mod urc;
 
 #[cfg(feature = "async")]
 pub mod asynch {
@@ -96,7 +97,7 @@ pub mod asynch {
 
         pub async fn lora_join_otaa(&mut self) -> Result<LoraJoiningStatus, Error> {
             let command = commands::LoraJoinOtaa {};
-            let response = self.client.send(&command).await?;
+            let response = self.client.send(&command).await?.response;
             Ok(response.into())
         }
         //
