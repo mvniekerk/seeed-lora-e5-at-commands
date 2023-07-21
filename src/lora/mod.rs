@@ -173,7 +173,7 @@ pub mod asynch {
                 hex_in_caps: false,
                 delimiter_after_nibble_count: 0,
                 delimiter: ' ',
-                skip_last_0_values: false,
+                skip_last_0_values: true,
             };
             let port_set = commands::LoraPortSet { port };
             let _response = self.client.send(&port_set).await?;
@@ -223,13 +223,13 @@ pub mod asynch {
         }
 
         pub async fn uplink_frame_count(&mut self) -> Result<u32, Error> {
-            let command = commands::LoraUplinkDownlinkCounterGet::default();
+            let command = commands::LoraUplinkDownlinkCounterGet {};
             let response = self.client.send(&command).await?;
             Ok(response.uplink())
         }
 
         pub async fn downlink_frame_count(&mut self) -> Result<u32, Error> {
-            let command = commands::LoraUplinkDownlinkCounterGet::default();
+            let command = commands::LoraUplinkDownlinkCounterGet {};
             let response = self.client.send(&command).await?;
             Ok(response.downlink())
         }

@@ -178,6 +178,18 @@ impl LoraE5Digester {
                 bytes::streaming::take_until("\r\n"),
                 bytes::streaming::tag("\r\n"),
             )),
+            // +PORT
+            sequence::tuple((
+                bytes::streaming::tag(b"+PORT: "),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
+            )),
+            // +PORT
+            sequence::tuple((
+                bytes::streaming::tag(b"+REPT: "),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
+            )),
             // +KEY
             sequence::tuple((
                 combinator::recognize(sequence::tuple((
@@ -186,15 +198,6 @@ impl LoraE5Digester {
                     bytes::streaming::tag(b" "),
                 ))),
                 bytes::streaming::take_until("\r\n"),
-                bytes::streaming::tag("\r\n"),
-            )),
-            // Join status
-            sequence::tuple((
-                combinator::success(&b""[..]),
-                combinator::recognize(sequence::tuple((
-                    bytes::streaming::tag(b"+JOIN_STD: "),
-                    bytes::streaming::take_until("\r\n"),
-                ))),
                 bytes::streaming::tag("\r\n"),
             )),
             // Receive bytes

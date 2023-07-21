@@ -7,10 +7,10 @@ use super::responses::{
 };
 use crate::lora::types::{LoraClass, LoraRegion};
 use crate::NoResponse;
-use atat::{AtatCmd, Error, InternalError};
-use atat_derive::AtatCmd;
+use atat::{AtatCmd, AtatLen, Error, InternalError};
+use atat_derive::{AtatCmd, AtatLen};
 use heapless::{String, Vec};
-use serde_at::HexStr;
+use serde_at::{HexStr, SerializeOptions};
 
 /// 4.3 ABP DevAddr Get
 /// Get the ABP mode DevAddr
@@ -118,16 +118,32 @@ pub struct MessageStringConfirmed {
 
 /// 4.7 MSGHEX
 /// Send hex format data frame that doesn't need to be confirmed by the server
-#[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+MSGHEX", NoResponse)]
+#[derive(Clone, Debug, AtatLen)]
 pub struct MessageHexUnconfirmed {
     pub message: HexStr<[u8; 256]>,
+}
+
+impl AtatCmd<{ MessageHexUnconfirmed::LEN }> for MessageHexUnconfirmed {
+    type Response = NoResponse;
+    const EXPECTS_RESPONSE_CODE: bool = false;
+
+    fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
+        Ok(NoResponse {})
+    }
+
+    fn as_bytes(&self) -> Vec<u8, { MessageHexUnconfirmed::LEN }> {
+        let mut buf = Vec::new();
+        let _ = buf.extend_from_slice(b"AT+MSGHEX=");
+        let _ = buf.extend(serde_at::to_string::<HexStr<[u8; 256]>, { MessageHexUnconfirmed::LEN }>(&self.message, "", SerializeOptions::default()).expect("Failed to serialize message").as_bytes());
+        let _ = buf.extend_from_slice(b"\r\n");
+        buf
+    }
 }
 
 /// 4.7.1 MSGHEX empty
 /// Send server unconfirmed payload with zero length
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+MSGHEX", NoResponse)]
+#[at_cmd("+MSGHEX", NoResponse )]
 pub struct MessageHexUnconfirmedEmpty {}
 
 /// 4.8 CMSGHEX
@@ -506,18 +522,37 @@ pub struct LoraClassSetAndSave {
 
 /// 4.28.2 LW ULDL upload download counter get
 /// Get the upload and download counter
-#[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+LW", UplinkDownlinkCounterGetResponse)]
+#[derive(Clone, Debug)]
+// #[at_cmd("+LW", UplinkDownlinkCounterGetResponse)]
 pub struct LoraUplinkDownlinkCounterGet {
     // ULDL
-    pub command: String<4>,
+    // pub command: String<4>,
 }
 
-impl Default for LoraUplinkDownlinkCounterGet {
-    fn default() -> Self {
-        Self {
-            command: String::from("ULDL"),
+impl AtatCmd<24> for LoraUplinkDownlinkCounterGet {
+    type Response = UplinkDownlinkCounterGetResponse;
+
+    fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
+        match resp {
+            Ok(resp) => {
+                let resp = core::str::from_utf8(resp).map_err(|_| Error::Parse)?;
+                let mut resp = resp.split(',');
+                let uplink = resp.nth(1).ok_or(Error::Parse)?;
+                let downlink = resp.next().ok_or(Error::Parse)?;
+                Ok(Self::Response {
+                    uplink: uplink.parse().map_err(|_| Error::Parse)?,
+                    downlink: downlink.parse().map_err(|_| Error::Parse)?,
+                })
+            }
+            Err(_err) => Err(Error::Parse),
         }
+    }
+
+    fn as_bytes(&self) -> Vec<u8, 24> {
+        use core::fmt::Write;
+        let mut buf = Vec::new();
+        write!(buf, "AT+LW=ULDL\r\n").unwrap();
+        buf
     }
 }
 

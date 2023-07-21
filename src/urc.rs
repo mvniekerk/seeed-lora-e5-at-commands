@@ -3,7 +3,7 @@
 //! This is just used internally, but needs to be public for passing [URCMessages] as a generic to
 //! [AtDigester](atat::digest::AtDigester): `AtDigester<URCMessages>`.
 
-use crate::lora::urc::JoinUrc;
+use crate::lora::urc::{JoinUrc, MessageHexSend};
 use atat::digest::ParseError;
 use atat::{
     nom::{branch, bytes, combinator, sequence},
@@ -11,12 +11,16 @@ use atat::{
 };
 
 /// URC definitions, needs to passed as generic of [AtDigester](atat::digest::AtDigester): `AtDigester<URCMessages>`
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum URCMessages {
     /// Unknown URC message
     Unknown,
-    SoftwareVersion(u8, u8, u8),
+    /// Join
     Join(JoinUrc),
+    /// Message Hex Sen
+    MessageHexSend(MessageHexSend),
+    /// Message received
+    MessageReceived,
 }
 
 impl URCMessages {}
@@ -27,6 +31,9 @@ impl AtatUrc for URCMessages {
     fn parse(resp: &[u8]) -> Option<Self::Response> {
         match resp {
             b if b.starts_with(b"+JOIN: ") => JoinUrc::parse(resp).ok().map(URCMessages::Join),
+            b if b.starts_with(b"+MSGHEX: ") => {
+                MessageHexSend::parse(resp).ok().map(URCMessages::MessageHexSend)
+            }
             _ => None,
         }
     }
@@ -47,6 +54,15 @@ impl Parser for URCMessages {
                 combinator::success(&b""[..]),
                 combinator::recognize(sequence::tuple((
                     bytes::streaming::tag("+JOIN: "),
+                    bytes::streaming::take_until("\r\n"),
+                ))),
+                bytes::streaming::tag("\r\n"),
+            )),
+            // Message Hex Send
+            sequence::tuple((
+                combinator::success(&b""[..]),
+                combinator::recognize(sequence::tuple((
+                    bytes::streaming::tag("+MSGHEX: "),
                     bytes::streaming::take_until("\r\n"),
                 ))),
                 bytes::streaming::tag("\r\n"),

@@ -134,15 +134,13 @@ pub struct MaxPayloadLengthGetResponse {
 /// Uplink/Downlink counter response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct UplinkDownlinkCounterGetResponse {
-    // ULDL 4294967295,
-    pub command: String<30>,
+    pub uplink: u32,
     pub downlink: u32,
 }
 
 impl UplinkDownlinkCounterGetResponse {
     pub fn uplink(&self) -> u32 {
-        let s = self.command.as_str().split(' ').skip(1).next().unwrap();
-        s.parse().unwrap()
+        self.uplink
     }
 
     pub fn downlink(&self) -> u32 {
