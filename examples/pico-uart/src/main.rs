@@ -20,11 +20,11 @@ use atat::AtatIngress;
 use atat::{asynch::Client, Buffers, Ingress};
 use embassy_time::{Duration, Timer};
 use embedded_alloc::Heap;
-use seeed_lora_e5_at::client::asynch::{JoinStatus, SeeedLoraE5Client};
-use seeed_lora_e5_at::digester::LoraE5Digester;
-use seeed_lora_e5_at::lora::types::{LoraClass, LoraJoinMode, LoraRegion};
-use seeed_lora_e5_at::urc::{
-    URCMessages, LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT,
+use seeed_lora_e5_at_commands::client::asynch::{JoinStatus, SeeedLoraE5Client};
+use seeed_lora_e5_at_commands::digester::LoraE5Digester;
+use seeed_lora_e5_at_commands::lora::types::{LoraClass, LoraJoinMode, LoraRegion};
+use seeed_lora_e5_at_commands::urc::{
+    URCMessages, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT,
 };
 
 const APP_KEY: u128 = 0xd65b042878144e038a744359c7cd1f9d;
@@ -222,10 +222,13 @@ async fn client_task(client: AtLoraE5Client<'static>) {
                     downlink_frame_count_get
                 );
                 downlink_frame_count = downlink_frame_count_get;
-                // let recv = client.receive().await;
-                let data = LAST_LORA_MESSAGE_RECEIVED.wait().await;
+                let rx = client.receive().await;
+                if rx.is_err() {
+                    error!("Error getting received bytes");
+                }
+                let (data, stats) = rx.unwrap();
                 let bytes = &data.payload;
-                info!("Received {:?} bytes, {:?} PORT", data.length, data.port);
+                info!("Received bytes: {:?}, port: {:?}, RXWIN: {}, RSSI: {}, SNR: {}", data.length, data.port, stats.rxwin, stats.rssi, stats.snr);
 
                 let l = core::str::from_utf8(&bytes[0..data.length]).unwrap();
                 info!("Bytes as string: {:?}", l);

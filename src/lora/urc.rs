@@ -1,8 +1,5 @@
 use crate::client::asynch::JoinStatus;
-use crate::urc::{
-    ReceivedMessage, URCMessages, LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS,
-    LORA_MESSAGE_RECEIVED_COUNT,
-};
+use crate::urc::{ReceivedMessage, URCMessages, LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT, LORA_MESSAGE_RECEIVED_STATS, MessageStats};
 use atat::digest::ParseError;
 use atat::helpers::LossyStr;
 use atat::nom::{branch, bytes, character, sequence};
@@ -188,6 +185,7 @@ impl MessageReceived {
                     .map_err(|_| ParseError::NoMatch)?
                     .parse()
                     .map_err(|_| ParseError::NoMatch)?;
+                LORA_MESSAGE_RECEIVED_STATS.reset();
 
                 LAST_LORA_MESSAGE_RECEIVED.signal(ReceivedMessage {
                     payload,
@@ -224,10 +222,16 @@ impl MessageReceived {
                 let snr = core::str::from_utf8(snr).map_err(|_| ParseError::NoMatch)?;
                 #[cfg(feature = "debug")]
                 trace!("rxwin: {}, rssi: {}, snr: {}", rxwin, rssi, snr);
+                let rxwin = rxwin.parse().map_err(|_| ParseError::NoMatch)?;
+                let rssi = rssi.parse().map_err(|_| ParseError::NoMatch)?;
+                let snr = snr.parse().map_err(|_| ParseError::NoMatch)?;
+
+                LORA_MESSAGE_RECEIVED_STATS.signal(MessageStats {rxwin, rssi, snr});
+
                 Ok(MessageReceived::RxWinRssiSnr(
-                    rxwin.parse().unwrap(),
-                    rssi.parse().unwrap(),
-                    snr.parse().unwrap(),
+                    rxwin,
+                    rssi,
+                    snr,
                 ))
             }
             x if x.starts_with(b"Done") => Ok(MessageReceived::Done),

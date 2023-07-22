@@ -11,7 +11,7 @@ pub mod asynch {
         commands,
         types::{LoraClass, LoraJoiningStatus, LoraRegion},
     };
-    use crate::urc::LORA_JOIN_STATUS;
+    use crate::urc::{LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_STATS, MessageStats, ReceivedMessage};
     use atat::asynch::AtatClient;
     use atat::Error;
     use embedded_io::asynch::Write;
@@ -201,11 +201,12 @@ pub mod asynch {
             }
         }
 
-        pub async fn receive(&mut self) -> Result<(), Error> {
-            // let command = commands::LoraReceiveBytes {};
-            // let response = self.client.send(&command).await?;
-            // Ok(response.into())
-            Ok(())
+        pub async fn receive(&mut self) -> Result<(ReceivedMessage, MessageStats), Error> {
+            let value = LAST_LORA_MESSAGE_RECEIVED.wait().await;
+            LAST_LORA_MESSAGE_RECEIVED.reset();
+            let stats = LORA_MESSAGE_RECEIVED_STATS.wait().await;
+            LORA_MESSAGE_RECEIVED_STATS.reset();
+            Ok((value, stats))
         }
 
         pub async fn adr_set(&mut self, on: bool) -> Result<bool, Error> {

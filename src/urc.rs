@@ -32,7 +32,7 @@ pub struct ReceivedMessage {
     pub length: usize,
 }
 
-pub struct SuccessfulSentMessage {
+pub struct MessageStats {
     pub rxwin: u8,
     pub rssi: i8,
     pub snr: f32,
@@ -40,13 +40,14 @@ pub struct SuccessfulSentMessage {
 
 pub enum SentMessage {
     Failed,
-    Success(SuccessfulSentMessage),
+    Success(MessageStats),
 }
 
 pub static LAST_LORA_MESSAGE_RECEIVED: Signal<CriticalSectionRawMutex, ReceivedMessage> =
     Signal::new();
 pub static LORA_MESSAGE_RECEIVED_COUNT: Signal<CriticalSectionRawMutex, u32> = Signal::new();
-pub static LAST_LORA_MESSAGE_SENT: Signal<CriticalSectionRawMutex, SuccessfulSentMessage> =
+pub static LORA_MESSAGE_RECEIVED_STATS: Signal<CriticalSectionRawMutex, MessageStats> = Signal::new();
+pub static LAST_LORA_MESSAGE_SENT: Signal<CriticalSectionRawMutex, MessageStats> =
     Signal::new();
 pub static LORA_JOIN_STATUS: Signal<CriticalSectionRawMutex, JoinStatus> = Signal::new();
 
