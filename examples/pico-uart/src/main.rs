@@ -24,7 +24,7 @@ use embedded_alloc::Heap;
 use seeed_lora_e5_at::client::asynch::{JoinStatus, SeeedLoraE5Client};
 use seeed_lora_e5_at::digester::LoraE5Digester;
 use seeed_lora_e5_at::lora::types::{LoraClass, LoraJoinMode, LoraJoiningStatus, LoraRegion};
-use seeed_lora_e5_at::urc::URCMessages;
+use seeed_lora_e5_at::urc::{LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT, URCMessages};
 use atat::AtatUrcChannel;
 
 const APP_KEY: u128 = 0xd65b042878144e038a744359c7cd1f9d;
@@ -32,12 +32,14 @@ const DEV_EUI: u64 = 0x68419fa0f7e74b0d;
 
 // Chunk size in bytes when receiving data. Value should be matched to buffer
 // size of receive() calls.
-const RX_SIZE: usize = 1044;
+// TODO should be 1012
+const RX_SIZE: usize = 1012;
 
 // Constants derived from TX_SIZE and RX_SIZE
 const INGRESS_BUF_SIZE: usize = RX_SIZE;
-const URC_SUBSCRIBERS: usize = 2;
-const URC_CAPACITY: usize = RX_SIZE * 3;
+const URC_SUBSCRIBERS: usize = 0;
+// const URC_CAPACITY: usize = RX_SIZE * 1;
+const URC_CAPACITY: usize = 40;
 
 type AtIngress<'a> =
     Ingress<'a, LoraE5Digester, URCMessages, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>;
@@ -78,11 +80,10 @@ async fn main(spawner: Spawner) {
     let digester = LoraE5Digester::default();
     static BUFFERS: Buffers<URCMessages, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS> =
         atat::Buffers::<URCMessages, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>::new();
-    let urc_channel = BUFFERS.urc_channel.subscribe().unwrap();
     let (ingress, client) = BUFFERS.split(tx, digester, config);
 
     unwrap!(spawner.spawn(read_task(ingress, rx)));
-    unwrap!(spawner.spawn(client_task(client, urc_channel, spawner.clone())));
+    unwrap!(spawner.spawn(client_task(client, spawner.clone())));
 }
 
 #[embassy_executor::task]
@@ -91,9 +92,9 @@ async fn read_task(mut ingress: AtIngress<'static>, mut rx: BufferedUartRx<'stat
 }
 
 #[embassy_executor::task]
-async fn client_task(client: AtLoraE5Client<'static>, urc_channel: UrcSubscription<'static, URCMessages>, spawner: Spawner) {
+async fn client_task(client: AtLoraE5Client<'static>, spawner: Spawner) {
 
-    let client = SeeedLoraE5Client::new(client, urc_channel).await;
+    let client = SeeedLoraE5Client::new(client).await;
     if let Err(e) = client {
         error!("Error creating client");
         return;
@@ -160,46 +161,41 @@ async fn client_task(client: AtLoraE5Client<'static>, urc_channel: UrcSubscripti
         info!("Auto join disabled");
     }
 
-    if let Err(e) = client.lora_join_otaa().await {
-        error!("Error joining");
-    } else {
-        info!("Started joining OTAA");
-    }
-
     let mut joined = false;
-    // let mut joined = true;
-    for _i in 0..2000 {
-        while let Ok(Some(urc)) = client.handle_urc().await {
-            info!("URC")
+    while !joined {
+        if let Err(e) = client.lora_join_otaa().await {
+            error!("Error joining");
+        } else {
+            info!("Started joining OTAA");
         }
-        let status = client.lora_join_status().await.expect("Should just read");
-        match status {
-            JoinStatus::Success => {
-                info!("Joined");
-                joined = true;
-                break;
-            }
-            JoinStatus::Joining => {
-            }
-            JoinStatus::Failure => {
-                info!("Join failed");
-                break;
-            }
-            JoinStatus::NotJoined => {
-                info!("Join failed");
-                break;
-            }
-            JoinStatus::Unknown => {
-                error!("Unknown error");
+
+        loop {
+            match LORA_JOIN_STATUS.wait().await {
+                JoinStatus::Success => {
+                    info!("Joined");
+                    joined = true;
+                    break;
+                }
+                JoinStatus::Joining => {}
+                JoinStatus::Failure => {
+                    info!("Join failed");
+                    break;
+                }
+                JoinStatus::NotJoined => {
+                    info!("Join failed");
+                    break;
+                }
+                JoinStatus::Unknown => {
+                    error!("Unknown error");
+                }
             }
         }
-        Timer::after(Duration::from_millis(10)).await;
+        if !joined {
+            error!("Failed to join");
+        }
     }
 
-    if !joined {
-        error!("Failed to join");
-        return;
-    }
+
     let mut uplink_frame_count = 0;
     let mut downlink_frame_count = 0;
     loop {
@@ -210,42 +206,28 @@ async fn client_task(client: AtLoraE5Client<'static>, urc_channel: UrcSubscripti
                 uplink_frame_count = uplink_frame_count_get;
             }
         }
-        match client.send(3, 12, b"Hello from Lora-E5").await {
-            Ok(_d) => {
-                info!("Sent bytes");
-            }
-            Err(e) => error!("Error sending {}", e),
-        }
+        // match client.send(3, 12, b"Hello from Lora-E5").await {
+        //     Ok(_d) => {
+        //         info!("Sent bytes");
+        //     }
+        //     Err(e) => error!("Error sending {}", e),
+        // }
         for _i in 0..4 {
-            let downlink_frame_count_get = client.downlink_frame_count().await;
-            if let Ok(downlink_frame_count_get) = downlink_frame_count_get {
-                if downlink_frame_count_get != downlink_frame_count {
-                    info!(
-                        "Downlink frame count changed: {:?}",
-                        downlink_frame_count_get
-                    );
-                    downlink_frame_count = downlink_frame_count_get;
-                    let recv = client.receive().await;
-                    match recv {
-                        Ok(recv) => {
-                            // match recv {
-                            // LoraReceivedBytes::None => {
-                            //     info!("No bytes received");
-                            // },
-                            // LoraReceivedBytes::Data(data) => {
-                            //     info!("Received {:?} bytes, {:?} RSSI, {:?} SNR, {:?} PORT", data.length, data.rssi, data.snr, data.port);
-                            //     let bytes = *data.data;
-                            //     let l = core::str::from_utf8(&bytes[0..(data.length as usize)]).unwrap();
-                            //     info!("Bytes as string: {:?}", l);
-                            // }
-                            // LoraReceivedBytes::Ack(ack) => {
-                            //     info!("Received ACK, {:?} RSSI, {:?} SNR", ack.rssi, ack.snr);
-                            // }
-                            // }
-                        }
-                        Err(e) => error!("Error receiving"),
-                    }
-                }
+            // let downlink_frame_count_get = client.downlink_frame_count().await;
+            let downlink_frame_count_get = LORA_MESSAGE_RECEIVED_COUNT.try_signaled_value().unwrap_or_default();
+            if downlink_frame_count_get != downlink_frame_count {
+                info!(
+                    "Downlink frame count changed: {:?}",
+                    downlink_frame_count_get
+                );
+                downlink_frame_count = downlink_frame_count_get;
+                // let recv = client.receive().await;
+                let data = LAST_LORA_MESSAGE_RECEIVED.wait().await;
+                let bytes = &data.payload;
+                info!("Received {:?} bytes, {:?} PORT", data.length, data.port);
+
+                let l = core::str::from_utf8(&bytes[0..(data.length as usize)]).unwrap();
+                info!("Bytes as string: {:?}", l);
             }
             Timer::after(Duration::from_secs(5)).await;
         }

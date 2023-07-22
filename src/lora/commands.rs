@@ -120,7 +120,7 @@ pub struct MessageStringConfirmed {
 /// Send hex format data frame that doesn't need to be confirmed by the server
 #[derive(Clone, Debug, AtatLen)]
 pub struct MessageHexUnconfirmed {
-    pub message: HexStr<[u8; 256]>,
+    pub message: HexStr<[u8; 242]>,
 }
 
 impl AtatCmd<{ MessageHexUnconfirmed::LEN }> for MessageHexUnconfirmed {
@@ -134,7 +134,15 @@ impl AtatCmd<{ MessageHexUnconfirmed::LEN }> for MessageHexUnconfirmed {
     fn as_bytes(&self) -> Vec<u8, { MessageHexUnconfirmed::LEN }> {
         let mut buf = Vec::new();
         let _ = buf.extend_from_slice(b"AT+MSGHEX=");
-        let _ = buf.extend(serde_at::to_string::<HexStr<[u8; 256]>, { MessageHexUnconfirmed::LEN }>(&self.message, "", SerializeOptions::default()).expect("Failed to serialize message").as_bytes());
+        let _ = buf.extend(
+            serde_at::to_string::<HexStr<[u8; 242]>, { MessageHexUnconfirmed::LEN }>(
+                &self.message,
+                "",
+                SerializeOptions::default(),
+            )
+            .expect("Failed to serialize message")
+            .as_bytes(),
+        );
         let _ = buf.extend_from_slice(b"\r\n");
         buf
     }
@@ -143,7 +151,7 @@ impl AtatCmd<{ MessageHexUnconfirmed::LEN }> for MessageHexUnconfirmed {
 /// 4.7.1 MSGHEX empty
 /// Send server unconfirmed payload with zero length
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+MSGHEX", NoResponse )]
+#[at_cmd("+MSGHEX", NoResponse)]
 pub struct MessageHexUnconfirmedEmpty {}
 
 /// 4.8 CMSGHEX
@@ -151,7 +159,7 @@ pub struct MessageHexUnconfirmedEmpty {}
 #[derive(Clone, Debug, AtatCmd)]
 #[at_cmd("+CMSGHEX", NoResponse)]
 pub struct MessageHexConfirmed {
-    pub message: HexStr<[u8; 256]>,
+    pub message: HexStr<[u8; 242]>,
 }
 
 /// 4.8.1 CMSGHEX empty

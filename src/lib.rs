@@ -5,6 +5,7 @@ pub mod client;
 pub mod digester;
 pub mod general;
 pub mod lora;
+pub mod signal;
 pub mod urc;
 
 #[derive(Debug, Clone, AtatResp, PartialEq)]

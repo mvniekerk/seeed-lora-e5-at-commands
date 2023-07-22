@@ -11,6 +11,7 @@ pub mod asynch {
         commands,
         types::{LoraClass, LoraJoiningStatus, LoraRegion},
     };
+    use crate::urc::LORA_JOIN_STATUS;
     use atat::asynch::AtatClient;
     use atat::Error;
     use embedded_io::asynch::Write;
@@ -97,12 +98,14 @@ pub mod asynch {
 
         pub async fn lora_join_otaa(&mut self) -> Result<LoraJoiningStatus, Error> {
             self.join_status.join_status = JoinStatus::Joining;
+            LORA_JOIN_STATUS.signal(JoinStatus::Joining);
             let command = commands::LoraJoinOtaa {};
             let response = self
                 .client
                 .send(&command)
                 .await
                 .map_err(|e| {
+                    LORA_JOIN_STATUS.signal(JoinStatus::NotJoined);
                     self.join_status.join_status = JoinStatus::NotJoined;
                     e
                 })?
@@ -111,10 +114,9 @@ pub mod asynch {
         }
 
         pub async fn lora_join_status(&mut self) -> Result<JoinStatus, Error> {
-            Ok(self.join_status.join_status.clone())
-            //     let command = commands::LoraJoinOtaaStatus {};
-            //     let response = self.client.send(&command).await?;
-            //     Ok(response.into())
+            Ok(LORA_JOIN_STATUS
+                .try_signaled_value()
+                .unwrap_or(JoinStatus::NotJoined))
         }
 
         // pub async fn auto_join(&mut self) -> Result<bool, Error> {
@@ -162,7 +164,7 @@ pub mod asynch {
             port: u8,
             data: &[u8],
         ) -> Result<(), Error> {
-            let mut val = [0u8; 256];
+            let mut val = [0u8; 242];
             for (place, array) in val.iter_mut().zip(data.iter()) {
                 *place = *array;
             }

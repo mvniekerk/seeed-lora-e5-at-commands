@@ -11,6 +11,7 @@ use atat::{
 };
 
 use crate::urc::URCMessages;
+use defmt::trace;
 #[cfg(feature = "debug")]
 use defmt::{debug, info};
 
@@ -231,7 +232,7 @@ impl LoraE5Digester {
             )),
         ))(buf)?;
         #[cfg(feature = "debug")]
-        info!("Custom success ! [{:?}]", LossyStr(data));
+        trace!("Custom success ! [{:?}]", LossyStr(data));
         Ok((data, head.len() + data.len() + tail.len()))
     }
 }
@@ -241,7 +242,7 @@ impl Digester for LoraE5Digester {
         #[cfg(feature = "debug")]
         let s = LossyStr(input);
         #[cfg(feature = "debug")]
-        info!("Digesting: {:?}", s);
+        debug!("Digesting: {:?}", s);
 
         // Incomplete. Eat the echo and do nothing else.
         let incomplete = (DigestResult::None, 0);
