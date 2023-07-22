@@ -94,7 +94,7 @@ impl From<String<26>> for LoraJoiningStatus {
             x if x.starts_with("NetId") => {
                 let mut parts = x.split(' ').skip(1);
                 let net_id = parts.next();
-                let dev_addr = parts.skip(1).next();
+                let dev_addr = parts.nth(1);
                 match (net_id, dev_addr) {
                     (Some(net_id), Some(dev_addr)) => {
                         let net_id = net_id.into();

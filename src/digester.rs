@@ -11,9 +11,8 @@ use atat::{
 };
 
 use crate::urc::URCMessages;
-use defmt::trace;
 #[cfg(feature = "debug")]
-use defmt::{debug, info};
+use defmt::{debug, trace};
 
 #[derive(Default)]
 pub struct LoraE5Digester {}
@@ -188,7 +187,13 @@ impl LoraE5Digester {
                 bytes::streaming::take_until("\r\n"),
                 bytes::streaming::tag("\r\n"),
             )),
-            // +PORT
+            // +RETRY
+            sequence::tuple((
+                bytes::streaming::tag(b"+RETRY: "),
+                bytes::streaming::take_until("\r\n"),
+                bytes::streaming::tag("\r\n"),
+            )),
+            // +REPT
             sequence::tuple((
                 bytes::streaming::tag(b"+REPT: "),
                 bytes::streaming::take_until("\r\n"),

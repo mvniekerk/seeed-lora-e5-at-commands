@@ -1,13 +1,10 @@
 #[cfg(feature = "async")]
 pub mod asynch {
     use crate::general::responses::VerResponse;
-    use crate::lora::urc::{JoinUrc, MessageReceived};
-    use crate::urc::URCMessages;
     pub use atat::asynch::Client;
-    use atat::{Error, UrcSubscription};
+    use atat::{Error};
     #[cfg(feature = "debug")]
     use defmt::{error, info, warn};
-    use embassy_sync::pubsub::WaitResult;
     pub use embedded_io::asynch::Write;
     use heapless::String;
 
@@ -52,7 +49,7 @@ pub mod asynch {
                 #[cfg(feature = "debug")]
                 error!("Error resetting Seeed LoRa-E5");
             }
-            let mut count_down = 200;
+            let mut count_down = 10;
             while s.verify_com_is_working().await.is_err() && count_down > 0 {
                 #[cfg(feature = "debug")]
                 warn!("Waiting for LoRa-E5 to reset...");

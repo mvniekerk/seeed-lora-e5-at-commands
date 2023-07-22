@@ -127,14 +127,14 @@ impl AtatCmd<{ MessageHexUnconfirmed::LEN + 20}> for MessageHexUnconfirmed {
     type Response = NoResponse;
     const EXPECTS_RESPONSE_CODE: bool = false;
 
-    fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
+    fn parse(&self, _resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
         Ok(NoResponse {})
     }
 
     fn as_bytes(&self) -> Vec<u8, { MessageHexUnconfirmed::LEN + 20 }> {
         let mut buf = Vec::new();
         let _ = buf.extend_from_slice(b"AT+MSGHEX=");
-        let _ = buf.extend(
+        buf.extend(
             serde_at::to_string::<HexStr<[u8; 242]>, { MessageHexUnconfirmed::LEN }>(
                 &self.message,
                 "",
@@ -165,14 +165,14 @@ impl AtatCmd<{ MessageHexConfirmed::LEN + 22 }> for MessageHexConfirmed {
     type Response = NoResponse;
     const EXPECTS_RESPONSE_CODE: bool = false;
 
-    fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
+    fn parse(&self, _resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
         Ok(NoResponse {})
     }
 
     fn as_bytes(&self) -> Vec<u8, { MessageHexConfirmed::LEN + 22 }> {
         let mut buf = Vec::new();
         let _ = buf.extend_from_slice(b"AT+CMSGHEX=");
-        let _ = buf.extend(
+        buf.extend(
             serde_at::to_string::<HexStr<[u8; 242]>, { MessageHexConfirmed::LEN }>(
                 &self.message,
                 "",
@@ -354,8 +354,7 @@ pub struct AppKeySet {
 
 impl AppKeySet {
     pub fn app_key(app_key: u128) -> Self {
-        let mut key: HexStr<u128> = HexStr::default();
-        key.val = app_key;
+        let key = HexStr::<u128> { val: app_key, ..Default::default() };
         Self {
             app_key_text: "APPKEY".into(),
             key,

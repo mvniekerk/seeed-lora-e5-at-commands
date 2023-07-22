@@ -5,13 +5,10 @@ use crate::urc::{
 };
 use atat::digest::ParseError;
 use atat::helpers::LossyStr;
-use atat::nom::character::streaming::u8;
 use atat::nom::{bytes, character, sequence, branch};
 #[cfg(feature = "debug")]
-use defmt::trace;
-use defmt::{error, info};
+use defmt::{trace, error, debug};
 use heapless::String;
-use serde_at::HexStr;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum AutoJoin {
@@ -55,7 +52,7 @@ impl JoinUrc {
                 x if x.starts_with("Joined already") => Ok(JoinUrc::JoinedAlready),
                 x if x.starts_with("Network joined") => Ok(JoinUrc::NetworkJoined),
                 x if x.starts_with("NetID") => {
-                    let mut s = x.split(" ");
+                    let mut s = x.split(' ');
                     let net_id = s.nth(1).ok_or(ParseError::NoMatch)?;
                     let dev_addr = s.nth(1).ok_or(ParseError::NoMatch)?;
                     Ok(JoinUrc::Success(net_id.into(), dev_addr.into()))
@@ -174,32 +171,18 @@ impl MessageReceived {
                 })?;
                 let payload_str_len = payload_str.len();
                 #[cfg(feature = "debug")]
-                trace!("Payload str [{}]{}", payload_str_len, LossyStr(payload_str));
+                debug!("Payload str [{}]{}", payload_str_len, LossyStr(payload_str));
                 let length = payload_str_len / 2 + if payload_str_len % 2 != 0 { 1 } else { 0 };
                 let mut payload = [0u8; 243];
 
-                for i in 0..length {
-                    let start = i * 2;
-                    let mut end = i * 2 + 2;
-                    if end > payload_str_len {
-                        end = payload_str_len;
-                    }
-                    let two_digits = &payload_str[start..end];
-                    #[cfg(feature = "debug")]
-                    trace!(
-                        "Parsing len{}[{}] {}..{} {}",
-                        length,
-                        payload_str.len(),
-                        start,
-                        end,
-                        LossyStr(two_digits)
-                    );
-                    let two_hex_digits =
-                        core::str::from_utf8(two_digits).map_err(|_| ParseError::NoMatch)?;
-                    let two_hex_digits =
-                        u8::from_str_radix(two_hex_digits, 16).map_err(|_| ParseError::NoMatch)?;
-                    payload[i] = two_hex_digits;
+                for (index, val) in payload_str.iter().enumerate().take(payload_str_len) {
+                    let val_bytes = [*val];
+                    let val_bytes = core::str::from_utf8(&val_bytes).map_err(|_| ParseError::NoMatch)?;
+                    let val = u8::from_str_radix(val_bytes, 16).map_err(|_| ParseError::NoMatch)?;
+                    let val = if index % 2 == 0 { val << 4 } else { val };
+                    payload[index / 2] += val;
                 }
+
                 let port = core::str::from_utf8(port)
                     .map_err(|_| ParseError::NoMatch)?
                     .parse()

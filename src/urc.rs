@@ -11,7 +11,7 @@ use atat::{
     nom::{branch, bytes, combinator, sequence},
     AtatUrc, Parser,
 };
-use embassy_sync::blocking_mutex::raw::{CriticalSectionRawMutex, NoopRawMutex};
+use embassy_sync::blocking_mutex::raw::{CriticalSectionRawMutex};
 
 /// URC definitions, needs to passed as generic of [AtDigester](atat::digest::AtDigester): `AtDigester<URCMessages>`
 #[derive(Debug, PartialEq, Clone)]

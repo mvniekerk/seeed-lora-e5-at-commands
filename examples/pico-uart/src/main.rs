@@ -16,16 +16,14 @@ use embassy_rp::uart::DataBits::DataBits8;
 use embassy_rp::uart::{BufferedUart, BufferedUartRx, BufferedUartTx, Config, Parity, StopBits};
 use {defmt_rtt as _, panic_probe as _};
 
-use atat::helpers::LossyStr;
-use atat::{AtatIngress, UrcSubscription};
+use atat::{AtatIngress};
 use atat::{asynch::Client, Buffers, Ingress};
 use embassy_time::{Duration, Timer};
 use embedded_alloc::Heap;
 use seeed_lora_e5_at::client::asynch::{JoinStatus, SeeedLoraE5Client};
 use seeed_lora_e5_at::digester::LoraE5Digester;
-use seeed_lora_e5_at::lora::types::{LoraClass, LoraJoinMode, LoraJoiningStatus, LoraRegion};
+use seeed_lora_e5_at::lora::types::{LoraClass, LoraJoinMode, LoraRegion};
 use seeed_lora_e5_at::urc::{LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT, URCMessages};
-use atat::AtatUrcChannel;
 
 const APP_KEY: u128 = 0xd65b042878144e038a744359c7cd1f9d;
 const DEV_EUI: u64 = 0x68419fa0f7e74b0d;
@@ -83,7 +81,7 @@ async fn main(spawner: Spawner) {
     let (ingress, client) = BUFFERS.split(tx, digester, config);
 
     unwrap!(spawner.spawn(read_task(ingress, rx)));
-    unwrap!(spawner.spawn(client_task(client, spawner.clone())));
+    unwrap!(spawner.spawn(client_task(client)));
 }
 
 #[embassy_executor::task]
@@ -92,11 +90,11 @@ async fn read_task(mut ingress: AtIngress<'static>, mut rx: BufferedUartRx<'stat
 }
 
 #[embassy_executor::task]
-async fn client_task(client: AtLoraE5Client<'static>, spawner: Spawner) {
+async fn client_task(client: AtLoraE5Client<'static>) {
 
     let client = SeeedLoraE5Client::new(client).await;
     if let Err(e) = client {
-        error!("Error creating client");
+        error!("Error creating client {}", e);
         return;
     }
     let mut client = client.unwrap();
@@ -120,43 +118,43 @@ async fn client_task(client: AtLoraE5Client<'static>, spawner: Spawner) {
     }
 
     if let Err(e) = client.app_key_set(APP_KEY).await {
-        error!("Error setting app key");
+        error!("Error setting app key {}", e);
     } else {
         info!("App key set");
     }
 
     if let Err(e) = client.lora_region_set(LoraRegion::Eu868).await {
-        error!("Error setting lora region");
+        error!("Error setting lora region {}", e);
     } else {
         info!("Lora region set");
     }
 
     if let Err(e) = client.lora_class_set(LoraClass::ClassC).await {
-        error!("Error setting lora class");
+        error!("Error setting lora class {}", e);
     } else {
         info!("Lora class set to Class C");
     }
 
     if let Err(e) = client.adr_set(false).await {
-        error!("Error setting lora adr");
+        error!("Error setting lora adr {}", e);
     } else {
         info!("Lora adr set to false");
     }
 
     if let Err(e) = client.dr_set(5).await {
-        error!("Error setting lora dr");
+        error!("Error setting lora dr {}", e);
     } else {
         info!("Lora dr set to 5");
     }
 
     if let Err(e) = client.confirm_send_set(false).await {
-        error!("Error confirm set");
+        error!("Error confirm set {}", e);
     } else {
         info!("Lora send ACK set to false");
     }
 
     if let Err(e) = client.auto_join_set(false, 3).await {
-        error!("Error setting auto join");
+        error!("Error setting auto join {}", e);
     } else {
         info!("Auto join disabled");
     }
@@ -164,7 +162,7 @@ async fn client_task(client: AtLoraE5Client<'static>, spawner: Spawner) {
     let mut joined = false;
     while !joined {
         if let Err(e) = client.lora_join_otaa().await {
-            error!("Error joining");
+            error!("Error joining {}", e);
         } else {
             info!("Started joining OTAA");
         }
@@ -206,7 +204,7 @@ async fn client_task(client: AtLoraE5Client<'static>, spawner: Spawner) {
                 uplink_frame_count = uplink_frame_count_get;
             }
         }
-        client.confirm_send_set(true);
+        let _ = client.confirm_send_set(true).await;
         match client.send(1, 12, b"Hello from Lora-E5").await {
             Ok(_d) => {
                 info!("Sent bytes");
@@ -227,7 +225,7 @@ async fn client_task(client: AtLoraE5Client<'static>, spawner: Spawner) {
                 let bytes = &data.payload;
                 info!("Received {:?} bytes, {:?} PORT", data.length, data.port);
 
-                let l = core::str::from_utf8(&bytes[0..(data.length as usize)]).unwrap();
+                let l = core::str::from_utf8(&bytes[0..data.length]).unwrap();
                 info!("Bytes as string: {:?}", l);
             }
             Timer::after(Duration::from_secs(5)).await;
