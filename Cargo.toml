@@ -1,5 +1,5 @@
 [package]
-name = "seeed-lora-e5-at"
+name = "seeed-lora-e5-at-commands"
 version = "0.1.0"
 edition = "2021"
 
