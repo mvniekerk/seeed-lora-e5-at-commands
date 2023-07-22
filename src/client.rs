@@ -2,7 +2,7 @@
 pub mod asynch {
     use crate::general::responses::VerResponse;
     pub use atat::asynch::Client;
-    use atat::{Error};
+    use atat::Error;
     #[cfg(feature = "debug")]
     use defmt::{error, info, warn};
     pub use embedded_io::asynch::Write;

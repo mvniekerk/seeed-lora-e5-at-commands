@@ -123,7 +123,7 @@ pub struct MessageHexUnconfirmed {
     pub message: HexStr<[u8; 242]>,
 }
 
-impl AtatCmd<{ MessageHexUnconfirmed::LEN + 20}> for MessageHexUnconfirmed {
+impl AtatCmd<{ MessageHexUnconfirmed::LEN + 20 }> for MessageHexUnconfirmed {
     type Response = NoResponse;
     const EXPECTS_RESPONSE_CODE: bool = false;
 
@@ -178,8 +178,8 @@ impl AtatCmd<{ MessageHexConfirmed::LEN + 22 }> for MessageHexConfirmed {
                 "",
                 SerializeOptions::default(),
             )
-                .expect("Failed to serialize message")
-                .as_bytes(),
+            .expect("Failed to serialize message")
+            .as_bytes(),
         );
         let _ = buf.extend_from_slice(b"\r\n");
         buf
@@ -354,7 +354,10 @@ pub struct AppKeySet {
 
 impl AppKeySet {
     pub fn app_key(app_key: u128) -> Self {
-        let key = HexStr::<u128> { val: app_key, ..Default::default() };
+        let key = HexStr::<u128> {
+            val: app_key,
+            ..Default::default()
+        };
         Self {
             app_key_text: "APPKEY".into(),
             key,

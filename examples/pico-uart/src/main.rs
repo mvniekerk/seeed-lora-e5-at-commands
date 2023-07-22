@@ -16,14 +16,16 @@ use embassy_rp::uart::DataBits::DataBits8;
 use embassy_rp::uart::{BufferedUart, BufferedUartRx, BufferedUartTx, Config, Parity, StopBits};
 use {defmt_rtt as _, panic_probe as _};
 
-use atat::{AtatIngress};
+use atat::AtatIngress;
 use atat::{asynch::Client, Buffers, Ingress};
 use embassy_time::{Duration, Timer};
 use embedded_alloc::Heap;
 use seeed_lora_e5_at::client::asynch::{JoinStatus, SeeedLoraE5Client};
 use seeed_lora_e5_at::digester::LoraE5Digester;
 use seeed_lora_e5_at::lora::types::{LoraClass, LoraJoinMode, LoraRegion};
-use seeed_lora_e5_at::urc::{LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT, URCMessages};
+use seeed_lora_e5_at::urc::{
+    URCMessages, LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT,
+};
 
 const APP_KEY: u128 = 0xd65b042878144e038a744359c7cd1f9d;
 const DEV_EUI: u64 = 0x68419fa0f7e74b0d;
@@ -91,7 +93,6 @@ async fn read_task(mut ingress: AtIngress<'static>, mut rx: BufferedUartRx<'stat
 
 #[embassy_executor::task]
 async fn client_task(client: AtLoraE5Client<'static>) {
-
     let client = SeeedLoraE5Client::new(client).await;
     if let Err(e) = client {
         error!("Error creating client {}", e);
@@ -193,7 +194,6 @@ async fn client_task(client: AtLoraE5Client<'static>) {
         }
     }
 
-
     let mut uplink_frame_count = 0;
     let mut downlink_frame_count = 0;
     loop {
@@ -213,7 +213,9 @@ async fn client_task(client: AtLoraE5Client<'static>) {
         }
         for _i in 0..4 {
             // let downlink_frame_count_get = client.downlink_frame_count().await;
-            let downlink_frame_count_get = LORA_MESSAGE_RECEIVED_COUNT.try_signaled_value().unwrap_or_default();
+            let downlink_frame_count_get = LORA_MESSAGE_RECEIVED_COUNT
+                .try_signaled_value()
+                .unwrap_or_default();
             if downlink_frame_count_get != downlink_frame_count {
                 info!(
                     "Downlink frame count changed: {:?}",

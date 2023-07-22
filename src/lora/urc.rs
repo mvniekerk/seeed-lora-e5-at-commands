@@ -5,9 +5,9 @@ use crate::urc::{
 };
 use atat::digest::ParseError;
 use atat::helpers::LossyStr;
-use atat::nom::{bytes, character, sequence, branch};
+use atat::nom::{branch, bytes, character, sequence};
 #[cfg(feature = "debug")]
-use defmt::{trace, error, debug};
+use defmt::{debug, error, trace};
 use heapless::String;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -92,9 +92,9 @@ impl From<MessageHexSend> for URCMessages {
 impl MessageHexSend {
     pub(crate) fn parse(buf: &[u8]) -> Result<Self, ParseError> {
         let (val, _) = branch::alt((
-                bytes::streaming::tag("+MSGHEX: "),
-                bytes::streaming::tag("+CMSGHEX: "),
-            ))(buf)?;
+            bytes::streaming::tag("+MSGHEX: "),
+            bytes::streaming::tag("+CMSGHEX: "),
+        ))(buf)?;
         let v = LossyStr(val);
         #[cfg(feature = "debug")]
         trace!("+(C)MSGHEX PARSE: {}", v);
@@ -177,7 +177,8 @@ impl MessageReceived {
 
                 for (index, val) in payload_str.iter().enumerate().take(payload_str_len) {
                     let val_bytes = [*val];
-                    let val_bytes = core::str::from_utf8(&val_bytes).map_err(|_| ParseError::NoMatch)?;
+                    let val_bytes =
+                        core::str::from_utf8(&val_bytes).map_err(|_| ParseError::NoMatch)?;
                     let val = u8::from_str_radix(val_bytes, 16).map_err(|_| ParseError::NoMatch)?;
                     let val = if index % 2 == 0 { val << 4 } else { val };
                     payload[index / 2] += val;

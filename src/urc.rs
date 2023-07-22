@@ -11,7 +11,7 @@ use atat::{
     nom::{branch, bytes, combinator, sequence},
     AtatUrc, Parser,
 };
-use embassy_sync::blocking_mutex::raw::{CriticalSectionRawMutex};
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 
 /// URC definitions, needs to passed as generic of [AtDigester](atat::digest::AtDigester): `AtDigester<URCMessages>`
 #[derive(Debug, PartialEq, Clone)]
@@ -58,9 +58,11 @@ impl AtatUrc for URCMessages {
     fn parse(resp: &[u8]) -> Option<Self::Response> {
         match resp {
             b if b.starts_with(b"+JOIN: ") => JoinUrc::parse(resp).ok().map(URCMessages::Join),
-            b if b.starts_with(b"+MSGHEX: ") || b.starts_with(b"+CMSGHEX: ") => MessageHexSend::parse(resp)
-                .ok()
-                .map(URCMessages::MessageHexSend),
+            b if b.starts_with(b"+MSGHEX: ") || b.starts_with(b"+CMSGHEX: ") => {
+                MessageHexSend::parse(resp)
+                    .ok()
+                    .map(URCMessages::MessageHexSend)
+            }
             b if b.starts_with(b"+MSG: ") => MessageReceived::parse(resp)
                 .ok()
                 .map(URCMessages::MessageReceived),
