@@ -194,7 +194,7 @@ pub mod asynch {
                         repeat: retransmission_times,
                     };
                     let _response = self.client.send(&repeat).await?;
-                    let command = commands::MessageHexUnconfirmed { message };
+                    let command = commands::MessageHexConfirmed { message };
                     let _response = self.client.send(&command).await?;
                     Ok(())
                 }

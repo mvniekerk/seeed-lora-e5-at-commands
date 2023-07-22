@@ -206,12 +206,13 @@ async fn client_task(client: AtLoraE5Client<'static>, spawner: Spawner) {
                 uplink_frame_count = uplink_frame_count_get;
             }
         }
-        // match client.send(3, 12, b"Hello from Lora-E5").await {
-        //     Ok(_d) => {
-        //         info!("Sent bytes");
-        //     }
-        //     Err(e) => error!("Error sending {}", e),
-        // }
+        client.confirm_send_set(true);
+        match client.send(1, 12, b"Hello from Lora-E5").await {
+            Ok(_d) => {
+                info!("Sent bytes");
+            }
+            Err(e) => error!("Error sending {}", e),
+        }
         for _i in 0..4 {
             // let downlink_frame_count_get = client.downlink_frame_count().await;
             let downlink_frame_count_get = LORA_MESSAGE_RECEIVED_COUNT.try_signaled_value().unwrap_or_default();

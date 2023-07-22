@@ -101,12 +101,15 @@ impl LoraE5Digester {
 
     pub fn custom_success(buf: &[u8]) -> Result<(&[u8], usize), ParseError> {
         #[cfg(feature = "debug")]
-        debug!("Custom success start {:?}", LossyStr(buf));
+        trace!("Custom success start {:?}", LossyStr(buf));
         let (_reminder, (head, data, tail)) = branch::alt((
             // AT command
             sequence::tuple((
-                bytes::streaming::tag(b"+AT: "),
-                bytes::streaming::take_until("\r\n"),
+                combinator::success(&b""[..]),
+                combinator::recognize(sequence::tuple((
+                    bytes::streaming::tag(b"+AT: "),
+                    bytes::streaming::take_until("\r\n"),
+                ))),
                 bytes::streaming::tag("\r\n"),
             )),
             // ATE
@@ -242,7 +245,7 @@ impl Digester for LoraE5Digester {
         #[cfg(feature = "debug")]
         let s = LossyStr(input);
         #[cfg(feature = "debug")]
-        debug!("Digesting: {:?}", s);
+        trace!("Digesting: {:?}", s);
 
         // Incomplete. Eat the echo and do nothing else.
         let incomplete = (DigestResult::None, 0);

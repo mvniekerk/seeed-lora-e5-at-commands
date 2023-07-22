@@ -123,7 +123,7 @@ pub struct MessageHexUnconfirmed {
     pub message: HexStr<[u8; 242]>,
 }
 
-impl AtatCmd<{ MessageHexUnconfirmed::LEN }> for MessageHexUnconfirmed {
+impl AtatCmd<{ MessageHexUnconfirmed::LEN + 20}> for MessageHexUnconfirmed {
     type Response = NoResponse;
     const EXPECTS_RESPONSE_CODE: bool = false;
 
@@ -131,7 +131,7 @@ impl AtatCmd<{ MessageHexUnconfirmed::LEN }> for MessageHexUnconfirmed {
         Ok(NoResponse {})
     }
 
-    fn as_bytes(&self) -> Vec<u8, { MessageHexUnconfirmed::LEN }> {
+    fn as_bytes(&self) -> Vec<u8, { MessageHexUnconfirmed::LEN + 20 }> {
         let mut buf = Vec::new();
         let _ = buf.extend_from_slice(b"AT+MSGHEX=");
         let _ = buf.extend(
@@ -156,10 +156,34 @@ pub struct MessageHexUnconfirmedEmpty {}
 
 /// 4.8 CMSGHEX
 /// Send hex format data that needs to be confirmed by the server
-#[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+CMSGHEX", NoResponse)]
+#[derive(Clone, Debug, AtatLen)]
 pub struct MessageHexConfirmed {
     pub message: HexStr<[u8; 242]>,
+}
+
+impl AtatCmd<{ MessageHexConfirmed::LEN + 22 }> for MessageHexConfirmed {
+    type Response = NoResponse;
+    const EXPECTS_RESPONSE_CODE: bool = false;
+
+    fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
+        Ok(NoResponse {})
+    }
+
+    fn as_bytes(&self) -> Vec<u8, { MessageHexConfirmed::LEN + 22 }> {
+        let mut buf = Vec::new();
+        let _ = buf.extend_from_slice(b"AT+CMSGHEX=");
+        let _ = buf.extend(
+            serde_at::to_string::<HexStr<[u8; 242]>, { MessageHexConfirmed::LEN }>(
+                &self.message,
+                "",
+                SerializeOptions::default(),
+            )
+                .expect("Failed to serialize message")
+                .as_bytes(),
+        );
+        let _ = buf.extend_from_slice(b"\r\n");
+        buf
+    }
 }
 
 /// 4.8.1 CMSGHEX empty

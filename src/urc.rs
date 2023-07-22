@@ -58,7 +58,7 @@ impl AtatUrc for URCMessages {
     fn parse(resp: &[u8]) -> Option<Self::Response> {
         match resp {
             b if b.starts_with(b"+JOIN: ") => JoinUrc::parse(resp).ok().map(URCMessages::Join),
-            b if b.starts_with(b"+MSGHEX: ") => MessageHexSend::parse(resp)
+            b if b.starts_with(b"+MSGHEX: ") || b.starts_with(b"+CMSGHEX: ") => MessageHexSend::parse(resp)
                 .ok()
                 .map(URCMessages::MessageHexSend),
             b if b.starts_with(b"+MSG: ") => MessageReceived::parse(resp)
@@ -92,7 +92,10 @@ impl Parser for URCMessages {
             sequence::tuple((
                 combinator::success(&b""[..]),
                 combinator::recognize(sequence::tuple((
-                    bytes::streaming::tag("+MSGHEX: "),
+                    branch::alt((
+                        bytes::streaming::tag("+MSGHEX: "),
+                        bytes::streaming::tag("+CMSGHEX: "),
+                    )),
                     bytes::streaming::take_until("\r\n"),
                 ))),
                 bytes::streaming::tag("\r\n"),

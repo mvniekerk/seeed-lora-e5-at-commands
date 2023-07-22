@@ -6,7 +6,7 @@ use crate::urc::{
 use atat::digest::ParseError;
 use atat::helpers::LossyStr;
 use atat::nom::character::streaming::u8;
-use atat::nom::{bytes, character, sequence};
+use atat::nom::{bytes, character, sequence, branch};
 #[cfg(feature = "debug")]
 use defmt::trace;
 use defmt::{error, info};
@@ -80,6 +80,8 @@ impl JoinUrc {
 pub enum MessageHexSend {
     Start,
     Pending,
+    AckReceived,
+    WaitAck,
     RxWinRssiSnr(u8, i8, f32),
     Done,
 }
@@ -92,12 +94,17 @@ impl From<MessageHexSend> for URCMessages {
 
 impl MessageHexSend {
     pub(crate) fn parse(buf: &[u8]) -> Result<Self, ParseError> {
-        let (val, _) = sequence::tuple((bytes::streaming::tag("+MSGHEX: "),))(buf)?;
+        let (val, _) = branch::alt((
+                bytes::streaming::tag("+MSGHEX: "),
+                bytes::streaming::tag("+CMSGHEX: "),
+            ))(buf)?;
         let v = LossyStr(val);
         #[cfg(feature = "debug")]
-        trace!("+MSGHEX PARSE: {}", v);
+        trace!("+(C)MSGHEX PARSE: {}", v);
         match val {
             x if x.starts_with(b"Start") => Ok(MessageHexSend::Start),
+            x if x.starts_with(b"ACK Received") => Ok(MessageHexSend::AckReceived),
+            x if x.starts_with(b"Wait ACK") => Ok(MessageHexSend::WaitAck),
             x if x.starts_with(b"FPENDING") => Ok(MessageHexSend::Pending),
             x if x.starts_with(b"RXWIN") => {
                 let (_, (_, rxwin, _, rssi, _, snr)) = sequence::tuple((
