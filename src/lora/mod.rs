@@ -11,7 +11,10 @@ pub mod asynch {
         commands,
         types::{LoraClass, LoraJoiningStatus, LoraRegion},
     };
-    use crate::urc::{LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT, LORA_MESSAGE_RECEIVED_STATS, MessageStats, ReceivedMessage};
+    use crate::urc::{
+        MessageStats, ReceivedMessage, LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS,
+        LORA_MESSAGE_RECEIVED_COUNT, LORA_MESSAGE_RECEIVED_STATS,
+    };
     use atat::asynch::AtatClient;
     use atat::Error;
     use embedded_io::asynch::Write;
@@ -123,7 +126,10 @@ pub mod asynch {
             self.lora_join_otaa().await?;
             loop {
                 let status = LORA_JOIN_STATUS.wait().await;
-                if matches!(status, JoinStatus::Success | JoinStatus::Failure | JoinStatus::NotJoined) {
+                if matches!(
+                    status,
+                    JoinStatus::Success | JoinStatus::Failure | JoinStatus::NotJoined
+                ) {
                     return Ok(status);
                 }
             }
@@ -242,7 +248,9 @@ pub mod asynch {
         }
 
         pub async fn downlink_message_count(&self) -> Result<u32, Error> {
-            Ok(LORA_MESSAGE_RECEIVED_COUNT.try_signaled_value().unwrap_or_default())
+            Ok(LORA_MESSAGE_RECEIVED_COUNT
+                .try_signaled_value()
+                .unwrap_or_default())
         }
     }
 }

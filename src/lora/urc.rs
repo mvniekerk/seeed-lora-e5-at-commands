@@ -1,5 +1,8 @@
 use crate::client::asynch::JoinStatus;
-use crate::urc::{ReceivedMessage, URCMessages, LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT, LORA_MESSAGE_RECEIVED_STATS, MessageStats};
+use crate::urc::{
+    MessageStats, ReceivedMessage, URCMessages, LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS,
+    LORA_MESSAGE_RECEIVED_COUNT, LORA_MESSAGE_RECEIVED_STATS,
+};
 use atat::digest::ParseError;
 use atat::helpers::LossyStr;
 use atat::nom::{branch, bytes, character, sequence};
@@ -226,13 +229,9 @@ impl MessageReceived {
                 let rssi = rssi.parse().map_err(|_| ParseError::NoMatch)?;
                 let snr = snr.parse().map_err(|_| ParseError::NoMatch)?;
 
-                LORA_MESSAGE_RECEIVED_STATS.signal(MessageStats {rxwin, rssi, snr});
+                LORA_MESSAGE_RECEIVED_STATS.signal(MessageStats { rxwin, rssi, snr });
 
-                Ok(MessageReceived::RxWinRssiSnr(
-                    rxwin,
-                    rssi,
-                    snr,
-                ))
+                Ok(MessageReceived::RxWinRssiSnr(rxwin, rssi, snr))
             }
             x if x.starts_with(b"Done") => Ok(MessageReceived::Done),
             x if x.starts_with(b"FPENDING") => Ok(MessageReceived::FPending),
