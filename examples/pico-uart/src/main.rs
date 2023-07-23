@@ -24,7 +24,7 @@ use seeed_lora_e5_at_commands::client::asynch::{JoinStatus, SeeedLoraE5Client};
 use seeed_lora_e5_at_commands::digester::LoraE5Digester;
 use seeed_lora_e5_at_commands::lora::types::{LoraClass, LoraJoinMode, LoraRegion};
 use seeed_lora_e5_at_commands::urc::{
-    URCMessages, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT,
+    URCMessages, LORA_MESSAGE_RECEIVED_COUNT,
 };
 
 const APP_KEY: u128 = 0xd65b042878144e038a744359c7cd1f9d;
@@ -160,38 +160,11 @@ async fn client_task(client: AtLoraE5Client<'static>) {
         info!("Auto join disabled");
     }
 
-    let mut joined = false;
-    while !joined {
-        if let Err(e) = client.lora_join_otaa().await {
-            error!("Error joining {}", e);
-        } else {
-            info!("Started joining OTAA");
+    loop {
+        if matches!(client.lora_join_otaa_and_wait_for_result().await, Ok(JoinStatus::Success)) {
+            break;
         }
-
-        loop {
-            match LORA_JOIN_STATUS.wait().await {
-                JoinStatus::Success => {
-                    info!("Joined");
-                    joined = true;
-                    break;
-                }
-                JoinStatus::Joining => {}
-                JoinStatus::Failure => {
-                    info!("Join failed");
-                    break;
-                }
-                JoinStatus::NotJoined => {
-                    info!("Join failed");
-                    break;
-                }
-                JoinStatus::Unknown => {
-                    error!("Unknown error");
-                }
-            }
-        }
-        if !joined {
-            error!("Failed to join");
-        }
+        error!("Failed to join, retrying");
     }
 
     let mut uplink_frame_count = 0;

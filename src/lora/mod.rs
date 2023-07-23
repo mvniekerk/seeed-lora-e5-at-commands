@@ -119,11 +119,15 @@ pub mod asynch {
                 .unwrap_or(JoinStatus::NotJoined))
         }
 
-        // pub async fn auto_join(&mut self) -> Result<bool, Error> {
-        //     let command = commands::LoraAutoJoinGet {};
-        //     let response = self.client.send(&command).await?;
-        //     Ok(response.is_on())
-        // }
+        pub async fn lora_join_otaa_and_wait_for_result(&mut self) -> Result<JoinStatus, Error> {
+            self.lora_join_otaa().await?;
+            loop {
+                let status = LORA_JOIN_STATUS.wait().await;
+                if matches!(status, JoinStatus::Success | JoinStatus::Failure | JoinStatus::NotJoined) {
+                    return Ok(status);
+                }
+            }
+        }
 
         pub async fn auto_join_set(
             &mut self,
