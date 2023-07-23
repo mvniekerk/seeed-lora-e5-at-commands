@@ -10,10 +10,13 @@ static HEAP: Heap = Heap::empty();
 use defmt::{error, info, unwrap};
 use embassy_executor::Spawner;
 use embassy_executor::_export::StaticCell;
-use embassy_rp::interrupt;
+use embassy_rp::bind_interrupts;
 use embassy_rp::peripherals::UART1;
 use embassy_rp::uart::DataBits::DataBits8;
-use embassy_rp::uart::{BufferedUart, BufferedUartRx, BufferedUartTx, Config, Parity, StopBits};
+use embassy_rp::uart::{
+    BufferedInterruptHandler, BufferedUart, BufferedUartRx, BufferedUartTx, Config, Parity,
+    StopBits,
+};
 use {defmt_rtt as _, panic_probe as _};
 
 use atat::AtatIngress;
@@ -23,9 +26,7 @@ use embedded_alloc::Heap;
 use seeed_lora_e5_at_commands::client::asynch::{JoinStatus, SeeedLoraE5Client};
 use seeed_lora_e5_at_commands::digester::LoraE5Digester;
 use seeed_lora_e5_at_commands::lora::types::{LoraClass, LoraJoinMode, LoraRegion};
-use seeed_lora_e5_at_commands::urc::{
-    URCMessages, LORA_MESSAGE_RECEIVED_COUNT,
-};
+use seeed_lora_e5_at_commands::urc::URCMessages;
 
 const APP_KEY: u128 = 0xd65b042878144e038a744359c7cd1f9d;
 const DEV_EUI: u64 = 0x68419fa0f7e74b0d;
@@ -46,6 +47,10 @@ type AtIngress<'a> =
 
 type AtLoraE5Client<'a> = Client<'a, BufferedUartTx<'a, UART1>, INGRESS_BUF_SIZE>;
 
+bind_interrupts!(struct Irqs {
+    UART1_IRQ => BufferedInterruptHandler<UART1>;
+});
+
 macro_rules! singleton {
     ($val:expr) => {{
         type T = impl Sized;
@@ -60,7 +65,6 @@ async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
     let (tx_pin, rx_pin, uart) = (p.PIN_4, p.PIN_5, p.UART1);
 
-    let irq = interrupt::take!(UART1_IRQ);
     let tx_buf = &mut singleton!([0u8; 32])[..];
     let rx_buf = &mut singleton!([0u8; 280])[..];
     let mut config = Config::default();
@@ -68,7 +72,7 @@ async fn main(spawner: Spawner) {
     config.parity = Parity::ParityNone;
     config.stop_bits = StopBits::STOP1;
     config.data_bits = DataBits8;
-    let uart = BufferedUart::new(uart, irq, tx_pin, rx_pin, tx_buf, rx_buf, config);
+    let uart = BufferedUart::new(uart, Irqs, tx_pin, rx_pin, tx_buf, rx_buf, config);
     let (rx, tx) = uart.split();
 
     // Atat client
@@ -161,7 +165,10 @@ async fn client_task(client: AtLoraE5Client<'static>) {
     }
 
     loop {
-        if matches!(client.lora_join_otaa_and_wait_for_result().await, Ok(JoinStatus::Success)) {
+        if matches!(
+            client.lora_join_otaa_and_wait_for_result().await,
+            Ok(JoinStatus::Success)
+        ) {
             break;
         }
         error!("Failed to join, retrying");
@@ -185,7 +192,8 @@ async fn client_task(client: AtLoraE5Client<'static>) {
             Err(e) => error!("Error sending {}", e),
         }
         for _i in 0..4 {
-            let downlink_frame_count_get = client.downlink_message_count().await;
+            let downlink_frame_count_get =
+                client.downlink_message_count().await.unwrap_or_default();
             if downlink_frame_count_get != downlink_frame_count {
                 info!(
                     "Downlink frame count changed: {:?}",
@@ -198,7 +206,10 @@ async fn client_task(client: AtLoraE5Client<'static>) {
                 }
                 let (data, stats) = rx.unwrap();
                 let bytes = &data.payload;
-                info!("Received bytes: {:?}, port: {:?}, RXWIN: {}, RSSI: {}, SNR: {}", data.length, data.port, stats.rxwin, stats.rssi, stats.snr);
+                info!(
+                    "Received bytes: {:?}, port: {:?}, RXWIN: {}, RSSI: {}, SNR: {}",
+                    data.length, data.port, stats.rxwin, stats.rssi, stats.snr
+                );
 
                 let l = core::str::from_utf8(&bytes[0..data.length]).unwrap();
                 info!("Bytes as string: {:?}", l);

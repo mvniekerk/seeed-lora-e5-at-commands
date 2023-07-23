@@ -7,10 +7,10 @@ edition = "2021"
 seeed-lora-e5-at-commands = { path = "../../", default-features=false, features = ["async", "debug"] }
 
 atat = { git = "https://github.com/BlackbirdHQ/atat.git", commit = "2e5538f51d9ddedec443b9c5230d87f9754288f9",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
-embassy-executor = { version = "0.1.0",  features = ["defmt", "integrated-timers"] }
-embassy-time = { version = "0.1.0",  features = ["defmt", "defmt-timestamp-uptime"] }
-embassy-rp = { version = "0.1.0",  features = ["defmt", "unstable-traits", "nightly", "unstable-pac", "time-driver"] }
-embassy-sync = { version = "0.1.0", features = ["defmt", "nightly"] }
+embassy-executor = { version = "0.2.0",  features = ["defmt", "integrated-timers", "nightly", "executor-thread", "arch-cortex-m"] }
+embassy-time = { version = "0.1",  features = ["defmt", "defmt-timestamp-uptime"] }
+embassy-rp = { version = "0.1",  features = ["defmt", "unstable-traits", "nightly", "unstable-pac", "time-driver"] }
+embassy-sync = { version = "0.2.0", features = ["defmt", "nightly"] }
 atomic-polyfill = "0.1.5"
 static_cell = "1.0"
 
@@ -35,11 +35,11 @@ nb = { version = "1", default-features = false }
 embedded-alloc = "0.5.0"
 
 [patch.crates-io]
-embassy-executor = { git = "https://github.com/embassy-rs/embassy", rev = "2c9f289f40b0c5dcbbcdb24cc7beda37a79a7287" }
-embassy-time = { git = "https://github.com/embassy-rs/embassy", rev = "2c9f289f40b0c5dcbbcdb24cc7beda37a79a7287" }
-#embassy-futures = { git = "https://github.com/embassy-rs/embassy", rev = "2c9f289f40b0c5dcbbcdb24cc7beda37a79a7287" }
-embassy-sync = { git = "https://github.com/embassy-rs/embassy", rev = "2c9f289f40b0c5dcbbcdb24cc7beda37a79a7287" }
-embassy-rp = { git = "https://github.com/embassy-rs/embassy", rev = "2c9f289f40b0c5dcbbcdb24cc7beda37a79a7287" }
+embassy-executor = { git = "https://github.com/embassy-rs/embassy", rev = "18b9b6c780b46165ead1de59ce258bd78786bdcb" }
+embassy-time = { git = "https://github.com/embassy-rs/embassy", rev = "18b9b6c780b46165ead1de59ce258bd78786bdcb" }
+embassy-futures = { git = "https://github.com/embassy-rs/embassy", rev = "18b9b6c780b46165ead1de59ce258bd78786bdcb" }
+embassy-sync = { git = "https://github.com/embassy-rs/embassy", rev = "18b9b6c780b46165ead1de59ce258bd78786bdcb" }
+embassy-rp = { git = "https://github.com/embassy-rs/embassy", rev = "18b9b6c780b46165ead1de59ce258bd78786bdcb" }
 
 [profile.dev]
 debug = 2
