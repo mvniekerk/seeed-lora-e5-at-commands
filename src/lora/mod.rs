@@ -11,7 +11,7 @@ pub mod asynch {
         commands,
         types::{LoraClass, LoraJoiningStatus, LoraRegion},
     };
-    use crate::urc::{LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_STATS, MessageStats, ReceivedMessage};
+    use crate::urc::{LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT, LORA_MESSAGE_RECEIVED_STATS, MessageStats, ReceivedMessage};
     use atat::asynch::AtatClient;
     use atat::Error;
     use embedded_io::asynch::Write;
@@ -239,6 +239,10 @@ pub mod asynch {
             let command = commands::LoraUplinkDownlinkCounterGet {};
             let response = self.client.send(&command).await?;
             Ok(response.downlink())
+        }
+
+        pub async fn downlink_message_count(&self) -> Result<u32, Error> {
+            Ok(LORA_MESSAGE_RECEIVED_COUNT.try_signaled_value().unwrap_or_default())
         }
     }
 }

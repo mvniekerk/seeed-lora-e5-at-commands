@@ -185,10 +185,7 @@ async fn client_task(client: AtLoraE5Client<'static>) {
             Err(e) => error!("Error sending {}", e),
         }
         for _i in 0..4 {
-            // let downlink_frame_count_get = client.downlink_frame_count().await;
-            let downlink_frame_count_get = LORA_MESSAGE_RECEIVED_COUNT
-                .try_signaled_value()
-                .unwrap_or_default();
+            let downlink_frame_count_get = client.downlink_message_count().await;
             if downlink_frame_count_get != downlink_frame_count {
                 info!(
                     "Downlink frame count changed: {:?}",
