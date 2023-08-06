@@ -117,10 +117,13 @@ impl MessageHexSend {
                 let snr = core::str::from_utf8(snr).map_err(|_| ParseError::NoMatch)?;
                 #[cfg(feature = "debug")]
                 trace!("rxwin: {}, rssi: {}, snr: {}", rxwin, rssi, snr);
+                let rxwin = rxwin.parse().unwrap_or(0);
+                let rssi = rssi.parse().unwrap_or(0);
+                let snr = snr.parse().unwrap_or(0.0);
                 Ok(MessageHexSend::RxWinRssiSnr(
-                    rxwin.parse().unwrap(),
-                    rssi.parse().unwrap(),
-                    snr.parse().unwrap(),
+                    rxwin,
+                    rssi,
+                    snr,
                 ))
             }
             x if x.starts_with(b"Done") => Ok(MessageHexSend::Done),
