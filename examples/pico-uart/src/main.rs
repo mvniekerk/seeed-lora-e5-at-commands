@@ -63,7 +63,8 @@ macro_rules! singleton {
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
-    let (tx_pin, rx_pin, uart) = (p.PIN_4, p.PIN_5, p.UART1);
+    // let (tx_pin, rx_pin, uart) = (p.PIN_4, p.PIN_5, p.UART1);
+    let (tx_pin, rx_pin, uart) = (p.PIN_8, p.PIN_9, p.UART1);
 
     let tx_buf = &mut singleton!([0u8; 32])[..];
     let rx_buf = &mut singleton!([0u8; 280])[..];

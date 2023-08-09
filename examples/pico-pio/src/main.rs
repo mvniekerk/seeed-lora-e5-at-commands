@@ -4,6 +4,7 @@
 #![feature(async_fn_in_trait)]
 
 pub mod pio_uart;
+pub mod led;
 
 extern crate alloc;
 
@@ -22,6 +23,7 @@ use crate::pio_uart::uart_tx::PioUartTx;
 use crate::pio_uart::PioUart;
 use atat::AtatIngress;
 use atat::{asynch::Client, Buffers, Ingress};
+use embassy_rp::gpio::{Level, Output};
 use embassy_rp::pio::InterruptHandler;
 use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
 use embassy_time::{Duration, Timer};
@@ -30,6 +32,7 @@ use seeed_lora_e5_at_commands::client::asynch::{JoinStatus, SeeedLoraE5Client};
 use seeed_lora_e5_at_commands::digester::LoraE5Digester;
 use seeed_lora_e5_at_commands::lora::types::{LoraClass, LoraJoinMode, LoraRegion};
 use seeed_lora_e5_at_commands::urc::URCMessages;
+use crate::led::{init_led, LedCommand, send_led_command};
 
 const APP_KEY: u128 = 0xd65b042878144e038a744359c7cd1f9d;
 const DEV_EUI: u64 = 0x68419fa0f7e74b0d;
@@ -59,7 +62,15 @@ async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
     static mut PIPE: embassy_sync::pipe::Pipe<ThreadModeRawMutex, 20> =
         embassy_sync::pipe::Pipe::new();
-    let pio_uart = unsafe { PioUart::new(9600, p.PIO0, p.PIN_4, p.PIN_5, &mut PIPE) };
+
+    let (pin_r, pin_g, pin_b) = (
+        Output::new(p.PIN_8, Level::Low),
+        Output::new(p.PIN_9, Level::Low),
+        Output::new(p.PIN_7, Level::Low),
+    );
+    init_led(pin_r, pin_g, pin_b, &spawner);
+
+    let pio_uart = unsafe { PioUart::new(9600, p.PIO0, p.PIN_10, p.PIN_11, &mut PIPE) };
     let (rx, tx, reader) = pio_uart.split();
 
     // Atat client
@@ -151,6 +162,9 @@ async fn client_task(client: AtLoraE5Client<'static>) {
         info!("Auto join disabled");
     }
 
+    send_led_command(LedCommand::Pulse(true, false, false, 2, 50, 50)).await;
+
+    send_led_command(LedCommand::SetColor(false, true, false)).await;
     loop {
         if matches!(
             client.lora_join_otaa_and_wait_for_result().await,
@@ -160,6 +174,7 @@ async fn client_task(client: AtLoraE5Client<'static>) {
         }
         error!("Failed to join, retrying");
     }
+    send_led_command(LedCommand::SetColor(false, false, true)).await;
 
     let mut uplink_frame_count = 0;
     let mut downlink_frame_count = 0;

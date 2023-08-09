@@ -11,7 +11,7 @@ pub mod asynch {
     use atat::Error;
     #[cfg(feature = "debug")]
     use defmt::error;
-    use embedded_io::asynch::Write;
+    use embedded_io_async::Write;
 
     impl<'a, W: Write, const INGRESS_BUF_SIZE: usize> SeeedLoraE5Client<'a, W, INGRESS_BUF_SIZE> {
         pub async fn verify_com_is_working(&mut self) -> Result<bool, Error> {

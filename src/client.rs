@@ -5,7 +5,7 @@ pub mod asynch {
     use atat::Error;
     #[cfg(feature = "debug")]
     use defmt::{error, info, warn};
-    pub use embedded_io::asynch::Write;
+    pub use embedded_io_async::Write;
     use heapless::String;
 
     #[derive(Clone, Debug, Copy)]
@@ -45,10 +45,10 @@ pub mod asynch {
                 #[cfg(feature = "debug")]
                 error!("Error verifying Seeed LoRa-E5 comms: {:?}", e);
             }
-            if s.reset().await.is_err() {
-                #[cfg(feature = "debug")]
-                error!("Error resetting Seeed LoRa-E5");
-            }
+            // if s.reset().await.is_err() {
+            //     #[cfg(feature = "debug")]
+            //     error!("Error resetting Seeed LoRa-E5");
+            // }
             let mut count_down = 10;
             while s.verify_com_is_working().await.is_err() && count_down > 0 {
                 #[cfg(feature = "debug")]

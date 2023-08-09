@@ -17,7 +17,7 @@ pub mod asynch {
     };
     use atat::asynch::AtatClient;
     use atat::Error;
-    use embedded_io::asynch::Write;
+    use embedded_io_async::Write;
     use heapless::String;
     use serde_at::HexStr;
 
