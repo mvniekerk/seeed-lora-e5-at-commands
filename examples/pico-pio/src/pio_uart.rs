@@ -31,8 +31,7 @@ impl<'a> PioUart<'a> {
         let writer = pipe.writer();
 
         let tx = PioUartTx::new(&mut common, sm0, tx_pin, baud);
-        let (rx, reader) =
-            PioUartRx::new(&mut common, sm1, rx_pin, baud, reader, writer);
+        let (rx, reader) = PioUartRx::new(&mut common, sm1, rx_pin, baud, reader, writer);
 
         PioUart { tx, rx, reader }
     }
@@ -84,7 +83,6 @@ pub mod uart_tx {
             sm_tx.set_pins(Level::High, &[&tx_pin]);
             sm_tx.set_pin_dirs(Direction::Out, &[&tx_pin]);
 
-
             let mut cfg = Config::default();
 
             cfg.set_out_pins(&[&tx_pin]);
@@ -105,7 +103,9 @@ pub mod uart_tx {
         }
     }
 
-    impl ErrorType for PioUartTx<'_> { type Error = Infallible; }
+    impl ErrorType for PioUartTx<'_> {
+        type Error = Infallible;
+    }
 
     impl Write for PioUartTx<'_> {
         async fn write(&mut self, buf: &[u8]) -> Result<usize, Infallible> {
@@ -193,7 +193,9 @@ pub mod uart_rx {
         }
     }
 
-    impl ErrorType for PioUartRx<'_> { type Error = Infallible; }
+    impl ErrorType for PioUartRx<'_> {
+        type Error = Infallible;
+    }
 
     impl Read for PioUartRx<'_> {
         async fn read(&mut self, buf: &mut [u8]) -> Result<usize, Infallible> {

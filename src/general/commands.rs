@@ -75,6 +75,11 @@ impl FirmwareVersion {
 #[at_cmd("+RESET", OkResponse, timeout_ms = 5000)]
 pub struct Reset {}
 
+/// 4.21 FDEFAULT
+#[derive(Clone, Debug, AtatCmd)]
+#[at_cmd("+FDEFAULT", OkResponse, timeout_ms = 5000)]
+pub struct FactoryReset {}
+
 /// 4.30 LOWPOWER until woken up
 /// Sleep until woken by RX
 #[derive(Clone, Debug, AtatCmd)]

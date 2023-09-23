@@ -1,6 +1,9 @@
 use crate::lora::types::{LoraJoinMode, LoraJoiningStartingStatus, LoraJoiningStatus};
 use atat_derive::AtatResp;
-use heapless::String;
+use core::str::FromStr;
+#[cfg(feature = "debug")]
+use defmt::error;
+use heapless::{String, Vec};
 use serde_at::HexStr;
 
 /// MODE Get/Set Response
@@ -108,6 +111,37 @@ impl From<String<26>> for LoraJoiningStatus {
             }
             _ => LoraJoiningStatus::Unknown,
         }
+    }
+}
+
+/// POWER force response
+#[derive(Debug, Clone, AtatResp, PartialEq)]
+pub struct TxPowerForceSetResponse {
+    pub db_m: u8,
+}
+
+/// POWER table
+#[derive(Debug, Clone, AtatResp, PartialEq)]
+pub struct TxPowerTable {
+    pub table: String<80>,
+}
+
+impl TxPowerTable {
+    pub fn db_m_list(&self) -> Result<Vec<u8, 12>, atat::Error> {
+        let mut ret = Vec::new();
+        for i in self.table.as_str().split(' ').map( u8::from_str) {
+            ret.push(i.map_err(|_e| {
+                #[cfg(feature = "debug")]
+                error!("Could not parse u8");
+                atat::Error::Parse
+            })?)
+            .map_err(|e| {
+                #[cfg(feature = "debug")]
+                error!("Could not add u8 to return of tx power tables: {}", e);
+                atat::Error::Parse
+            })?;
+        }
+        Ok(ret)
     }
 }
 

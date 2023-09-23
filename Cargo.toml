@@ -18,9 +18,9 @@ keywords = ["at", "lora", "no_std", "seeed", "async"]
 categories = ["embedded", "hardware-support", "network-programming"]
 
 [dependencies]
-atat = { git = "https://github.com/mvniekerk/atat.git", commit = "17a32b47eb8320e12fe6a93c921e334ed61fddf9",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
-atat_derive = { git = "https://github.com/mvniekerk/atat.git", commit = "17a32b47eb8320e12fe6a93c921e334ed61fddf9" }
-serde_at = { git = "https://github.com/mvniekerk/atat.git", commit = "17a32b47eb8320e12fe6a93c921e334ed61fddf9", default-features=false, features = ["hex_str_arrays"] }
+atat = { git = "https://github.com/BlackbirdHQ/atat.git", commit = "c5caaf7588c500af35d1c9be4229e47893845864",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
+atat_derive = { git = "https://github.com/BlackbirdHQ/atat.git", commit = "c5caaf7588c500af35d1c9be4229e47893845864" }
+serde_at = { git = "https://github.com/BlackbirdHQ/atat.git", commit = "c5caaf7588c500af35d1c9be4229e47893845864", default-features=false, features = ["hex_str_arrays"] }
 nb = { version = "1" }
 heapless = "0.7"
 heapless-bytes = "0.3"

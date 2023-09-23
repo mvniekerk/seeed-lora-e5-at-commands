@@ -120,11 +120,7 @@ impl MessageHexSend {
                 let rxwin = rxwin.parse().unwrap_or(0);
                 let rssi = rssi.parse().unwrap_or(0);
                 let snr = snr.parse().unwrap_or(0.0);
-                Ok(MessageHexSend::RxWinRssiSnr(
-                    rxwin,
-                    rssi,
-                    snr,
-                ))
+                Ok(MessageHexSend::RxWinRssiSnr(rxwin, rssi, snr))
             }
             x if x.starts_with(b"Done") => Ok(MessageHexSend::Done),
             _ => Err(ParseError::NoMatch),

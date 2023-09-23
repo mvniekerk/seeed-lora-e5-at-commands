@@ -18,7 +18,7 @@ pub mod asynch {
     use atat::asynch::AtatClient;
     use atat::Error;
     use embedded_io_async::Write;
-    use heapless::String;
+    use heapless::{String, Vec};
     use serde_at::HexStr;
 
     static mut CONFIRMED_SENDING: Option<bool> = Some(false);
@@ -251,6 +251,18 @@ pub mod asynch {
             Ok(LORA_MESSAGE_RECEIVED_COUNT
                 .try_signaled_value()
                 .unwrap_or_default())
+        }
+
+        pub async fn tx_power_force_set(&mut self, db_m: u8) -> Result<u8, Error> {
+            let command = commands::TxPowerForceSet::new(db_m);
+            let response = self.client.send(&command).await?;
+            Ok(response.db_m)
+        }
+
+        pub async fn tx_power_table(&mut self) -> Result<Vec<u8, 12>, Error> {
+            let command = commands::TxPowerTableGet::default();
+            let response = self.client.send(&command).await?;
+            response.db_m_list()
         }
     }
 }

@@ -12,6 +12,7 @@ use atat::{
     AtatUrc, Parser,
 };
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::pipe::Pipe;
 
 /// URC definitions, needs to passed as generic of [AtDigester](atat::digest::AtDigester): `AtDigester<URCMessages>`
 #[derive(Debug, PartialEq, Clone)]
@@ -50,6 +51,9 @@ pub static LORA_MESSAGE_RECEIVED_STATS: Signal<CriticalSectionRawMutex, MessageS
     Signal::new();
 pub static LAST_LORA_MESSAGE_SENT: Signal<CriticalSectionRawMutex, MessageStats> = Signal::new();
 pub static LORA_JOIN_STATUS: Signal<CriticalSectionRawMutex, JoinStatus> = Signal::new();
+
+#[cfg(feature = "debug")]
+pub static LORA_LATEST_BUF: Pipe<CriticalSectionRawMutex, 50> = Pipe::new();
 
 impl URCMessages {}
 

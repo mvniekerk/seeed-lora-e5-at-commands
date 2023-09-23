@@ -2,8 +2,8 @@ use super::responses::{
     AbpDevAddrResponse, AdrGetSetResponse, AppKeySetResponse, DataRateGetSetResponse,
     LoRaWANClassGetSetResponse, LoraOtaaAutoJoinResponse, LoraOtaaJoinResponse,
     MaxPayloadLengthGetResponse, ModeGetSetResponse, OtaaAppEuiResponse, OtaaDevEuiResponse,
-    PortGetSetResponse, RepeatGetSetResponse, RetryGetSetResponse,
-    UplinkDownlinkCounterGetResponse,
+    PortGetSetResponse, RepeatGetSetResponse, RetryGetSetResponse, TxPowerForceSetResponse,
+    TxPowerTable, UplinkDownlinkCounterGetResponse,
 };
 use crate::lora::types::{LoraClass, LoraRegion};
 use crate::NoResponse;
@@ -309,6 +309,40 @@ impl DataRateSchemeSet {
     pub fn region(region: LoraRegion) -> Self {
         Self {
             scheme: region.into(),
+        }
+    }
+}
+
+/// 4.15.2 POWER force set
+/// Force set the dBm TX power
+#[derive(Clone, Debug, AtatCmd)]
+#[at_cmd("+POWER", TxPowerForceSetResponse)]
+pub struct TxPowerForceSet {
+    pub db_m: u8,
+    pub force_txt: String<20>,
+}
+
+impl TxPowerForceSet {
+    pub fn new(db_m: u8) -> Self {
+        Self {
+            db_m,
+            force_txt: "FORCE".into(),
+        }
+    }
+}
+
+/// 4.15.3 POWER table get
+/// Get the TX power table in dbM
+#[derive(Clone, Debug, AtatCmd)]
+#[at_cmd("+POWER", TxPowerTable)]
+pub struct TxPowerTableGet {
+    pub table_txt: String<10>,
+}
+
+impl Default for TxPowerTableGet {
+    fn default() -> Self {
+        Self {
+            table_txt: "TABLE".into(),
         }
     }
 }

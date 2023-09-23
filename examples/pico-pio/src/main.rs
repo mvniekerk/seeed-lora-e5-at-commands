@@ -3,8 +3,8 @@
 #![feature(type_alias_impl_trait)]
 #![feature(async_fn_in_trait)]
 
-pub mod pio_uart;
 pub mod led;
+pub mod pio_uart;
 
 extern crate alloc;
 
@@ -18,6 +18,7 @@ use embassy_rp::peripherals::PIO0;
 
 use {defmt_rtt as _, panic_probe as _};
 
+use crate::led::{init_led, send_led_command, LedCommand};
 use crate::pio_uart::uart_rx::{read_from_pio_uart_task, PioUartRx};
 use crate::pio_uart::uart_tx::PioUartTx;
 use crate::pio_uart::PioUart;
@@ -32,7 +33,6 @@ use seeed_lora_e5_at_commands::client::asynch::{JoinStatus, SeeedLoraE5Client};
 use seeed_lora_e5_at_commands::digester::LoraE5Digester;
 use seeed_lora_e5_at_commands::lora::types::{LoraClass, LoraJoinMode, LoraRegion};
 use seeed_lora_e5_at_commands::urc::URCMessages;
-use crate::led::{init_led, LedCommand, send_led_command};
 
 const APP_KEY: u128 = 0xd65b042878144e038a744359c7cd1f9d;
 const DEV_EUI: u64 = 0x68419fa0f7e74b0d;

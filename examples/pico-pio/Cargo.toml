@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 seeed-lora-e5-at-commands = { path = "../../", default-features=false, features = ["async", "debug"] }
 
-atat = { git = "https://github.com/mvniekerk/atat.git", commit = "17a32b47eb8320e12fe6a93c921e334ed61fddf9",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
+atat = { git = "https://github.com/BlackbirdHQ/atat.git", commit = "c5caaf7588c500af35d1c9be4229e47893845864",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
 embassy-executor = { version = "0.2.0",  features = ["defmt", "integrated-timers", "nightly", "executor-thread", "arch-cortex-m"] }
 embassy-time = { version = "0.1",  features = ["defmt", "defmt-timestamp-uptime"] }
 embassy-rp = { version = "0.1",  features = ["defmt", "unstable-traits", "nightly", "unstable-pac", "time-driver"] }

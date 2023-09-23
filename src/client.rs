@@ -49,13 +49,14 @@ pub mod asynch {
             //     #[cfg(feature = "debug")]
             //     error!("Error resetting Seeed LoRa-E5");
             // }
-            let mut count_down = 10;
+            let mut count_down = 20;
             while s.verify_com_is_working().await.is_err() && count_down > 0 {
                 #[cfg(feature = "debug")]
                 warn!("Waiting for LoRa-E5 to reset...");
                 count_down -= 1;
             }
             if count_down == 0 {
+                s.factory_reset().await?;
                 return Err(Error::Timeout);
             }
             let version = s.version().await;

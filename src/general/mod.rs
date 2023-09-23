@@ -5,7 +5,7 @@ pub mod types;
 #[cfg(feature = "async")]
 pub mod asynch {
     use crate::client::asynch::SeeedLoraE5Client;
-    use crate::general::commands::{FirmwareVersion, Reset, VerifyComIsWorking};
+    use crate::general::commands::{FactoryReset, FirmwareVersion, Reset, VerifyComIsWorking};
     use crate::general::responses::VerResponse;
     use atat::asynch::AtatClient;
     use atat::Error;
@@ -42,6 +42,17 @@ pub mod asynch {
             if let Err(e) = resp {
                 #[cfg(feature = "debug")]
                 error!("Error resetting Seeed LoRa-E5: {:?}", e);
+                return Err(e);
+            }
+            Ok(())
+        }
+
+        pub async fn factory_reset(&mut self) -> Result<(), Error> {
+            let command = FactoryReset {};
+            let resp = self.client.send(&command).await;
+            if let Err(e) = resp {
+                #[cfg(feature = "debug")]
+                error!("Error factory resetting Seeed LoRa-E5: {:?}", e);
                 return Err(e);
             }
             Ok(())

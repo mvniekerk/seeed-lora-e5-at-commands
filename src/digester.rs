@@ -10,6 +10,9 @@ use atat::{
     DigestResult, Digester, Parser,
 };
 
+#[cfg(feature = "debug")]
+use crate::urc::LORA_LATEST_BUF;
+
 use crate::urc::URCMessages;
 #[cfg(feature = "debug")]
 use defmt::{debug, trace};
@@ -99,6 +102,15 @@ impl LoraE5Digester {
     }
 
     pub fn custom_success(buf: &[u8]) -> Result<(&[u8], usize), ParseError> {
+        #[cfg(feature = "debug")]
+        if buf.is_empty() {
+            match LORA_LATEST_BUF.try_write(buf) {
+                Ok(_) => {}
+                Err(_) => {
+                    trace!("Failed to write to LORA_LATEST_BUF");
+                }
+            }
+        }
         #[cfg(feature = "debug")]
         trace!("Custom success start {:?}", LossyStr(buf));
         let (_reminder, (head, data, tail)) = branch::alt((
@@ -241,6 +253,7 @@ impl LoraE5Digester {
         ))(buf)?;
         #[cfg(feature = "debug")]
         trace!("Custom success ! [{:?}]", LossyStr(data));
+
         Ok((data, head.len() + data.len() + tail.len()))
     }
 }
