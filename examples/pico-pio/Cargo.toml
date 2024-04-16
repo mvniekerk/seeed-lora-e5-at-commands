@@ -6,47 +6,39 @@ edition = "2021"
 [dependencies]
 seeed-lora-e5-at-commands = { path = "../../", default-features=false, features = ["async", "debug"] }
 
-atat = { git = "https://github.com/BlackbirdHQ/atat.git", commit = "c5caaf7588c500af35d1c9be4229e47893845864",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
-embassy-executor = { version = "0.2.0",  features = ["defmt", "integrated-timers", "nightly", "executor-thread", "arch-cortex-m"] }
-embassy-time = { version = "0.1",  features = ["defmt", "defmt-timestamp-uptime"] }
-embassy-rp = { version = "0.1",  features = ["defmt", "unstable-traits", "nightly", "unstable-pac", "time-driver"] }
-embassy-sync = { version = "0.2.0", features = ["defmt", "nightly"] }
-atomic-polyfill = "0.1.5"
-static_cell = "1.0"
+atat = {version = "0.22.0", features = ["derive", "bytes", "hex_str_arrays"]}
+embassy-executor = { version = "0.5.0",  features = ["defmt", "integrated-timers", "nightly", "executor-thread", "arch-cortex-m"] }
+embassy-time = { version = "0.3.0",  features = ["defmt", "defmt-timestamp-uptime"] }
+embassy-rp = { version = "0.1",  features = ["defmt", "unstable-pac", "time-driver"] }
+embassy-sync = { version = "0.5.0", features = ["defmt"] }
+atomic-polyfill = "1.0.3"
+static_cell = "1"
 
 defmt = "0.3"
-defmt-rtt = "0.3"
+defmt-rtt = "0.4.0"
 panic-probe = { version = "0.3", features = ["print-defmt"] }
 
 cortex-m = { version = "0.7.6", features = ["critical-section-single-core"]}
 cortex-m-rt = "0.7.0"
 
-embedded-hal-1 = { package = "embedded-hal", version = "1.0.0-alpha.9" }
-embedded-hal-async = { version = "0.2.0-alpha.0" }
-embedded-io = "0.5.0"
-embedded-io-async = "0.5.0"
-heapless = "0.7"
+embedded-hal-1 = { package = "embedded-hal", version = "1" }
+embedded-hal-async = { version = "1" }
+embedded-io = "0.6.1"
+embedded-io-async = "0.6.1"
+heapless = "0.8.0"
 
-#bbqueue = { version = "0.5", features = ["thumbv6", "defmt_0_3"]}
-bbqueue = { git = "https://github.com/jamesmunns/bbqueue", rev = "refs/pull/95/head", default-features=false, features = ["thumbv6"] }
+bbqueue = { git = "https://github.com/jamesmunns/bbqueue", rev = "d9f647f0545fc1fc4dcdbba142b29e1fd98da38b", default-features=false, features = ["thumbv6"] }
 
 fugit = { version ="0.3",  default-features = false }
 nb = { version = "1", default-features = false }
 
-embedded-alloc = "0.5.0"
+embedded-alloc = "0.5"
 
 fixed = "1.23.1"
 fixed-macro = "1.2"
 
 pio-proc = "0.2"
 pio = "0.2.1"
-
-[patch.crates-io]
-embassy-executor = { git = "https://github.com/embassy-rs/embassy", rev = "fcb77f3f96479b371e1279c9feed7eddf6b53083" }
-embassy-time = { git = "https://github.com/embassy-rs/embassy", rev = "fcb77f3f96479b371e1279c9feed7eddf6b53083" }
-embassy-futures = { git = "https://github.com/embassy-rs/embassy", rev = "fcb77f3f96479b371e1279c9feed7eddf6b53083" }
-embassy-sync = { git = "https://github.com/embassy-rs/embassy", rev = "fcb77f3f96479b371e1279c9feed7eddf6b53083" }
-embassy-rp = { git = "https://github.com/embassy-rs/embassy", rev = "fcb77f3f96479b371e1279c9feed7eddf6b53083" }
 
 [profile.dev]
 debug = 2

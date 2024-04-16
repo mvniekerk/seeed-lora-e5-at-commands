@@ -3,9 +3,10 @@ use crate::NoResponse;
 use atat::digest::ParseError;
 use atat::{AtatCmd, Error, InternalError};
 use atat_derive::AtatCmd;
+use core::str::FromStr;
 #[cfg(feature = "debug")]
 use defmt::error;
-use heapless::Vec;
+use heapless::String;
 
 /// 4.1 AT
 /// Used to test if the communication with the device is working
@@ -17,8 +18,15 @@ pub struct VerifyComIsWorking {}
 /// Get the version of the firmware running on the unit
 #[derive(Clone, Debug)]
 pub struct FirmwareVersion {}
-impl AtatCmd<16> for FirmwareVersion {
+impl AtatCmd for FirmwareVersion {
     type Response = VerResponse;
+
+    const MAX_LEN: usize = 8;
+
+    fn write(&self, buf: &mut [u8]) -> usize {
+        buf.copy_from_slice(b"AT+VER\r\n");
+        8
+    }
 
     fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
         if resp.is_err() {
@@ -48,13 +56,6 @@ impl AtatCmd<16> for FirmwareVersion {
             }
         }
     }
-
-    fn as_bytes(&self) -> Vec<u8, 16> {
-        use core::fmt::Write;
-        let mut buf = Vec::new();
-        write!(buf, "AT+VER\r\n").unwrap();
-        buf
-    }
 }
 
 impl FirmwareVersion {
@@ -76,9 +77,27 @@ impl FirmwareVersion {
 pub struct Reset {}
 
 /// 4.21 FDEFAULT
-#[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+FDEFAULT", OkResponse, timeout_ms = 5000)]
+#[derive(Clone, Debug)]
 pub struct FactoryReset {}
+
+impl AtatCmd for FactoryReset {
+    type Response = OkResponse;
+
+    const MAX_LEN: usize = 20;
+
+    const MAX_TIMEOUT_MS: u32 = 15000;
+
+    fn write(&self, buf: &mut [u8]) -> usize {
+        buf.copy_from_slice(b"+AT+FDEFAULT=Seeed\r\n");
+        20
+    }
+
+    fn parse(&self, _resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
+        Ok(OkResponse {
+            ok: String::from_str("OK").unwrap(),
+        })
+    }
+}
 
 /// 4.30 LOWPOWER until woken up
 /// Sleep until woken by RX

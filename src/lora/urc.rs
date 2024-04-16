@@ -4,6 +4,7 @@ use crate::urc::{
     LORA_MESSAGE_RECEIVED_COUNT, LORA_MESSAGE_RECEIVED_STATS,
 };
 use atat::digest::ParseError;
+#[cfg(feature = "debug")]
 use atat::helpers::LossyStr;
 use atat::nom::{branch, bytes, character, sequence};
 #[cfg(feature = "debug")]
@@ -39,9 +40,13 @@ impl From<JoinUrc> for URCMessages {
 impl JoinUrc {
     pub(crate) fn parse(buf: &[u8]) -> Result<Self, ParseError> {
         let (val, _) = sequence::tuple((bytes::streaming::tag("+JOIN: "),))(buf)?;
-        let v = LossyStr(val);
+
         #[cfg(feature = "debug")]
-        trace!("+JOIN PARSE: {}", v);
+        {
+            let v = LossyStr(val);
+            trace!("+JOIN PARSE: {}", v);
+        }
+
         let ret = match core::str::from_utf8(val) {
             Ok(val) => match val {
                 x if x.starts_with("Start") => Ok(JoinUrc::Start),
@@ -55,7 +60,10 @@ impl JoinUrc {
                     let mut s = x.split(' ');
                     let net_id = s.nth(1).ok_or(ParseError::NoMatch)?;
                     let dev_addr = s.nth(1).ok_or(ParseError::NoMatch)?;
-                    Ok(JoinUrc::Success(net_id.into(), dev_addr.into()))
+                    Ok(JoinUrc::Success(
+                        net_id.try_into().unwrap(),
+                        dev_addr.try_into().unwrap(),
+                    ))
                 }
                 x if x.starts_with("Done") => Ok(JoinUrc::Done),
                 _ => Err(ParseError::NoMatch),
@@ -95,9 +103,11 @@ impl MessageHexSend {
             bytes::streaming::tag("+MSGHEX: "),
             bytes::streaming::tag("+CMSGHEX: "),
         ))(buf)?;
-        let v = LossyStr(val);
         #[cfg(feature = "debug")]
-        trace!("+(C)MSGHEX PARSE: {}", v);
+        {
+            let v = LossyStr(val);
+            trace!("+(C)MSGHEX PARSE: {}", v);
+        }
         match val {
             x if x.starts_with(b"Start") => Ok(MessageHexSend::Start),
             x if x.starts_with(b"ACK Received") => Ok(MessageHexSend::AckReceived),
@@ -151,9 +161,12 @@ impl From<MessageReceived> for URCMessages {
 impl MessageReceived {
     pub(crate) fn parse(buf: &[u8]) -> Result<Self, ParseError> {
         let (val, _) = sequence::tuple((bytes::streaming::tag("+MSG: "),))(buf)?;
-        let v = LossyStr(val);
+
         #[cfg(feature = "debug")]
-        trace!("+MSG PARSE: {}", v);
+        {
+            let v = LossyStr(val);
+            trace!("+MSG PARSE: {}", v);
+        }
         match val {
             x if x.starts_with(b"PORT: ") => {
                 let (_, (_, port, _, payload_str, _)) = sequence::tuple((

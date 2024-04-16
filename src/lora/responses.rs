@@ -100,8 +100,8 @@ impl From<String<26>> for LoraJoiningStatus {
                 let dev_addr = parts.nth(1);
                 match (net_id, dev_addr) {
                     (Some(net_id), Some(dev_addr)) => {
-                        let net_id = net_id.into();
-                        let dev_addr = dev_addr.into();
+                        let net_id = net_id.try_into().unwrap();
+                        let dev_addr = dev_addr.try_into().unwrap();
                         LoraJoiningStatus::Starting(LoraJoiningStartingStatus::Done(
                             net_id, dev_addr,
                         ))
@@ -129,7 +129,7 @@ pub struct TxPowerTable {
 impl TxPowerTable {
     pub fn db_m_list(&self) -> Result<Vec<u8, 12>, atat::Error> {
         let mut ret = Vec::new();
-        for i in self.table.as_str().split(' ').map( u8::from_str) {
+        for i in self.table.as_str().split(' ').map(u8::from_str) {
             ret.push(i.map_err(|_e| {
                 #[cfg(feature = "debug")]
                 error!("Could not parse u8");
@@ -137,7 +137,9 @@ impl TxPowerTable {
             })?)
             .map_err(|e| {
                 #[cfg(feature = "debug")]
-                error!("Could not add u8 to return of tx power tables: {}", e);
+                {
+                    error!("Could not add u8 to return of tx power tables: {}", e);
+                }
                 atat::Error::Parse
             })?;
         }

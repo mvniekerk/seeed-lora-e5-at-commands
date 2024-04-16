@@ -12,6 +12,8 @@ use atat::{
     AtatUrc, Parser,
 };
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+
+#[cfg(feature = "debug")]
 use embassy_sync::pipe::Pipe;
 
 /// URC definitions, needs to passed as generic of [AtDigester](atat::digest::AtDigester): `AtDigester<URCMessages>`

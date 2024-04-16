@@ -1,7 +1,5 @@
 #![no_std]
 #![no_main]
-#![feature(type_alias_impl_trait)]
-
 extern crate alloc;
 
 #[global_allocator]
@@ -9,7 +7,6 @@ static HEAP: Heap = Heap::empty();
 
 use defmt::{error, info, unwrap};
 use embassy_executor::Spawner;
-use embassy_executor::_export::StaticCell;
 use embassy_rp::bind_interrupts;
 use embassy_rp::peripherals::UART1;
 use embassy_rp::uart::DataBits::DataBits8;
@@ -19,14 +16,15 @@ use embassy_rp::uart::{
 };
 use {defmt_rtt as _, panic_probe as _};
 
-use atat::AtatIngress;
-use atat::{asynch::Client, Buffers, Ingress};
+use atat::{asynch::Client, Ingress};
+use atat::{AtatIngress, ResponseSlot, UrcChannel};
 use embassy_time::{Duration, Timer};
 use embedded_alloc::Heap;
 use seeed_lora_e5_at_commands::client::asynch::{JoinStatus, SeeedLoraE5Client};
 use seeed_lora_e5_at_commands::digester::LoraE5Digester;
 use seeed_lora_e5_at_commands::lora::types::{LoraClass, LoraJoinMode, LoraRegion};
 use seeed_lora_e5_at_commands::urc::URCMessages;
+use static_cell::StaticCell;
 
 const APP_KEY: u128 = 0xd65b042878144e038a744359c7cd1f9d;
 const DEV_EUI: u64 = 0x68419fa0f7e74b0d;
@@ -63,7 +61,6 @@ macro_rules! singleton {
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
-    // let (tx_pin, rx_pin, uart) = (p.PIN_4, p.PIN_5, p.UART1);
     let (tx_pin, rx_pin, uart) = (p.PIN_8, p.PIN_9, p.UART1);
 
     let tx_buf = &mut singleton!([0u8; 32])[..];
@@ -76,17 +73,19 @@ async fn main(spawner: Spawner) {
     let uart = BufferedUart::new(uart, Irqs, tx_pin, rx_pin, tx_buf, rx_buf, config);
     let (rx, tx) = uart.split();
 
-    // Atat client
-    let config = atat::Config::default()
-        .flush_timeout(Duration::from_millis(2000))
-        .cmd_cooldown(Duration::from_millis(200))
-        .tx_timeout(Duration::from_millis(2000));
-
     let digester = LoraE5Digester::default();
-    static BUFFERS: Buffers<URCMessages, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS> =
-        atat::Buffers::<URCMessages, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>::new();
-    let (ingress, client) = BUFFERS.split(tx, digester, config);
 
+    static RES_SLOT: ResponseSlot<INGRESS_BUF_SIZE> = ResponseSlot::new();
+    static INGRESS_BUF: StaticCell<[u8; INGRESS_BUF_SIZE]> = StaticCell::new();
+    static URC_CHANNEL: UrcChannel<URCMessages, URC_CAPACITY, URC_SUBSCRIBERS> = UrcChannel::new();
+    let ingress = Ingress::new(
+        digester,
+        INGRESS_BUF.init([0; INGRESS_BUF_SIZE]),
+        &RES_SLOT,
+        &URC_CHANNEL,
+    );
+    static BUF: StaticCell<[u8; 1024]> = StaticCell::new();
+    let client = Client::new(tx, &RES_SLOT, BUF.init([0; 1024]), atat::Config::default());
     unwrap!(spawner.spawn(read_task(ingress, rx)));
     unwrap!(spawner.spawn(client_task(client)));
 }

@@ -22,17 +22,18 @@ use crate::led::{init_led, send_led_command, LedCommand};
 use crate::pio_uart::uart_rx::{read_from_pio_uart_task, PioUartRx};
 use crate::pio_uart::uart_tx::PioUartTx;
 use crate::pio_uart::PioUart;
-use atat::AtatIngress;
-use atat::{asynch::Client, Buffers, Ingress};
+use atat::{asynch::Client, Ingress};
+use atat::{AtatIngress, ResponseSlot, UrcChannel};
 use embassy_rp::gpio::{Level, Output};
 use embassy_rp::pio::InterruptHandler;
-use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_time::{Duration, Timer};
 use embedded_alloc::Heap;
 use seeed_lora_e5_at_commands::client::asynch::{JoinStatus, SeeedLoraE5Client};
 use seeed_lora_e5_at_commands::digester::LoraE5Digester;
 use seeed_lora_e5_at_commands::lora::types::{LoraClass, LoraJoinMode, LoraRegion};
 use seeed_lora_e5_at_commands::urc::URCMessages;
+use static_cell::StaticCell;
 
 const APP_KEY: u128 = 0xd65b042878144e038a744359c7cd1f9d;
 const DEV_EUI: u64 = 0x68419fa0f7e74b0d;
@@ -60,7 +61,7 @@ bind_interrupts!(pub struct Irqs {
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
-    static mut PIPE: embassy_sync::pipe::Pipe<ThreadModeRawMutex, 20> =
+    static mut PIPE: embassy_sync::pipe::Pipe<CriticalSectionRawMutex, 20> =
         embassy_sync::pipe::Pipe::new();
 
     let (pin_r, pin_g, pin_b) = (
@@ -80,9 +81,18 @@ async fn main(spawner: Spawner) {
         .tx_timeout(Duration::from_millis(2000));
 
     let digester = LoraE5Digester::default();
-    static BUFFERS: Buffers<URCMessages, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS> =
-        atat::Buffers::<URCMessages, INGRESS_BUF_SIZE, URC_CAPACITY, URC_SUBSCRIBERS>::new();
-    let (ingress, client) = BUFFERS.split(tx, digester, config);
+
+    static RES_SLOT: ResponseSlot<INGRESS_BUF_SIZE> = ResponseSlot::new();
+    static INGRESS_BUF: StaticCell<[u8; INGRESS_BUF_SIZE]> = StaticCell::new();
+    static URC_CHANNEL: UrcChannel<URCMessages, URC_CAPACITY, URC_SUBSCRIBERS> = UrcChannel::new();
+    let ingress = Ingress::new(
+        digester,
+        INGRESS_BUF.init([0; INGRESS_BUF_SIZE]),
+        &RES_SLOT,
+        &URC_CHANNEL,
+    );
+    static BUF: StaticCell<[u8; 1024]> = StaticCell::new();
+    let client = Client::new(tx, &RES_SLOT, BUF.init([0; 1024]), atat::Config::default());
     unwrap!(spawner.spawn(read_from_pio_uart_task(reader)));
     unwrap!(spawner.spawn(read_task(ingress, rx)));
     unwrap!(spawner.spawn(client_task(client)));

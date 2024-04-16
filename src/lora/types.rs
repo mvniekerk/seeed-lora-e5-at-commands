@@ -45,23 +45,25 @@ pub enum LoraRegion {
 impl From<LoraRegion> for String<24> {
     fn from(value: LoraRegion) -> Self {
         match value {
-            LoraRegion::Eu868 => "EU868".into(),
-            LoraRegion::US915 => "US915".into(),
-            LoraRegion::Us915Hybrid => "US915HYBRID".into(),
-            LoraRegion::Cn779 => "CN779".into(),
-            LoraRegion::Eu433 => "EU433".into(),
-            LoraRegion::Au915 => "AU915".into(),
-            LoraRegion::Au915Old => "AU915OLD".into(),
-            LoraRegion::Cn470 => "CN470".into(),
-            LoraRegion::As923 => "AS923".into(),
-            LoraRegion::Kr920 => "KR920".into(),
-            LoraRegion::In865 => "IN865".into(),
-            LoraRegion::Ru864 => "RU864".into(),
-            LoraRegion::Cn470Prequel => "CN470PREQUEL".into(),
-            LoraRegion::Ste920 => "STE920".into(),
-            LoraRegion::Jp920 => "JP920".into(),
-            _ => "UNKNOWN".into(),
+            LoraRegion::Eu868 => "EU868",
+            LoraRegion::US915 => "US915",
+            LoraRegion::Us915Hybrid => "US915HYBRID",
+            LoraRegion::Cn779 => "CN779",
+            LoraRegion::Eu433 => "EU433",
+            LoraRegion::Au915 => "AU915",
+            LoraRegion::Au915Old => "AU915OLD",
+            LoraRegion::Cn470 => "CN470",
+            LoraRegion::As923 => "AS923",
+            LoraRegion::Kr920 => "KR920",
+            LoraRegion::In865 => "IN865",
+            LoraRegion::Ru864 => "RU864",
+            LoraRegion::Cn470Prequel => "CN470PREQUEL",
+            LoraRegion::Ste920 => "STE920",
+            LoraRegion::Jp920 => "JP920",
+            _ => "UNKNOWN",
         }
+        .try_into()
+        .unwrap()
     }
 }
 
@@ -118,11 +120,13 @@ impl From<String<2>> for LoraClass {
 impl From<LoraClass> for String<2> {
     fn from(value: LoraClass) -> Self {
         match value {
-            LoraClass::ClassA => "A".into(),
-            LoraClass::ClassB => "B".into(),
-            LoraClass::ClassC => "C".into(),
-            LoraClass::Unknown => "".into(),
+            LoraClass::ClassA => "A",
+            LoraClass::ClassB => "B",
+            LoraClass::ClassC => "C",
+            LoraClass::Unknown => "",
         }
+        .try_into()
+        .unwrap()
     }
 }
 
@@ -145,4 +149,15 @@ pub enum LoraJoiningStatus {
     Failed,
     Busy,
     Unknown,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum LoraVersion {
+    V10,
+    V101,
+    V102,
+    V102B,
+    V103,
+    V102Alpha,
+    V11,
 }

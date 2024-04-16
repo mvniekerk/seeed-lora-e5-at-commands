@@ -29,6 +29,12 @@ pub mod asynch {
     }
 
     impl<'a, W: Write, const INGRESS_BUF_SIZE: usize> SeeedLoraE5Client<'a, W, INGRESS_BUF_SIZE> {
+        pub fn eject_client(self) -> Client<'a, W, INGRESS_BUF_SIZE> {
+            self.client
+        }
+    }
+
+    impl<'a, W: Write, const INGRESS_BUF_SIZE: usize> SeeedLoraE5Client<'a, W, INGRESS_BUF_SIZE> {
         pub async fn new(
             client: Client<'a, W, INGRESS_BUF_SIZE>,
         ) -> Result<SeeedLoraE5Client<'a, W, INGRESS_BUF_SIZE>, Error> {
@@ -41,15 +47,18 @@ pub mod asynch {
                 },
             };
 
+            #[cfg(feature = "debug")]
             if let Err(e) = s.verify_com_is_working().await {
-                #[cfg(feature = "debug")]
                 error!("Error verifying Seeed LoRa-E5 comms: {:?}", e);
             }
+
+            #[cfg(not(feature = "debug"))]
+            let _ = s.verify_com_is_working().await;
             // if s.reset().await.is_err() {
             //     #[cfg(feature = "debug")]
             //     error!("Error resetting Seeed LoRa-E5");
             // }
-            let mut count_down = 20;
+            let mut count_down = 10;
             while s.verify_com_is_working().await.is_err() && count_down > 0 {
                 #[cfg(feature = "debug")]
                 warn!("Waiting for LoRa-E5 to reset...");
@@ -59,24 +68,27 @@ pub mod asynch {
                 s.factory_reset().await?;
                 return Err(Error::Timeout);
             }
-            let version = s.version().await;
-            match version {
-                Err(e) => {
-                    #[cfg(feature = "debug")]
-                    error!("Error getting Seeed LoRa-E5 firmware version: {:?}", e);
-                }
-                Ok(VerResponse {
-                    major,
-                    minor,
-                    patch,
-                }) => {
-                    #[cfg(feature = "debug")]
-                    info!(
-                        "Seeed LoRa-E5 firmware version: {}.{}.{}",
-                        major, minor, patch
-                    );
+
+            #[cfg(feature = "debug")]
+            {
+                let version = s.version().await;
+                match version {
+                    Err(e) => {
+                        error!("Error getting Seeed LoRa-E5 firmware version: {:?}", e);
+                    }
+                    Ok(VerResponse {
+                        major,
+                        minor,
+                        patch,
+                    }) => {
+                        info!(
+                            "Seeed LoRa-E5 firmware version: {}.{}.{}",
+                            major, minor, patch
+                        );
+                    }
                 }
             }
+
             Ok(s)
         }
     }

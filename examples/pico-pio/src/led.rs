@@ -186,7 +186,7 @@ async fn led_command_handler(
     receiver: Receiver<'static, NoopRawMutex, LedCommand, 4>,
 ) {
     loop {
-        let val = receiver.recv().await;
+        let val = receiver.receive().await;
         match val {
             LedCommand::Pulse(red, green, blue, pulse, delay_on_ms, delay_off_ms) => {
                 led.pulse(red, green, blue, pulse, delay_on_ms, delay_off_ms)

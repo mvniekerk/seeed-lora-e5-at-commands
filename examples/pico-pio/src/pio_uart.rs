@@ -1,7 +1,7 @@
 use embassy_rp::peripherals::PIO0;
 use embassy_rp::pio::{Pio, PioPin};
 use embassy_rp::Peripheral;
-use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 
 use crate::pio_uart::uart_rx::{PioUartRx, PioUartRxReader};
 use crate::pio_uart::uart_tx::PioUartTx;
@@ -19,7 +19,7 @@ impl<'a> PioUart<'a> {
         pio: impl Peripheral<P = PIO0> + 'a,
         tx_pin: impl PioPin,
         rx_pin: impl PioPin,
-        pipe: &'a mut embassy_sync::pipe::Pipe<ThreadModeRawMutex, 20>,
+        pipe: &'a mut embassy_sync::pipe::Pipe<CriticalSectionRawMutex, 20>,
     ) -> PioUart<'a> {
         let Pio {
             mut common,
@@ -27,8 +27,7 @@ impl<'a> PioUart<'a> {
             sm1,
             ..
         } = Pio::new(pio, Irqs);
-        let reader = pipe.reader();
-        let writer = pipe.writer();
+        let (reader, writer) = pipe.split();
 
         let tx = PioUartTx::new(&mut common, sm0, tx_pin, baud);
         let (rx, reader) = PioUartRx::new(&mut common, sm1, rx_pin, baud, reader, writer);
@@ -125,19 +124,19 @@ pub mod uart_rx {
     use embassy_rp::pio::{
         Common, Config, Direction, FifoJoin, PioPin, ShiftDirection, StateMachine,
     };
-    use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
+    use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
     use embedded_io::ErrorType;
     use embedded_io_async::Read;
     use fixed::traits::ToFixed;
     use fixed_macro::types::U56F8;
 
     pub struct PioUartRx<'a> {
-        reader: embassy_sync::pipe::Reader<'a, ThreadModeRawMutex, 20>,
+        reader: embassy_sync::pipe::Reader<'a, CriticalSectionRawMutex, 20>,
     }
 
     pub struct PioUartRxReader<'a> {
         sm_rx: StateMachine<'a, PIO0, 1>,
-        writer: embassy_sync::pipe::Writer<'a, ThreadModeRawMutex, 20>,
+        writer: embassy_sync::pipe::Writer<'a, CriticalSectionRawMutex, 20>,
     }
 
     impl<'a> PioUartRx<'a> {
@@ -146,8 +145,8 @@ pub mod uart_rx {
             mut sm_rx: StateMachine<'a, PIO0, 1>,
             rx_pin: impl PioPin,
             baud: u64,
-            reader: embassy_sync::pipe::Reader<'a, ThreadModeRawMutex, 20>,
-            writer: embassy_sync::pipe::Writer<'a, ThreadModeRawMutex, 20>,
+            reader: embassy_sync::pipe::Reader<'a, CriticalSectionRawMutex, 20>,
+            writer: embassy_sync::pipe::Writer<'a, CriticalSectionRawMutex, 20>,
         ) -> (Self, PioUartRxReader<'a>) {
             let prg = pio_proc::pio_asm!(
                 r#"

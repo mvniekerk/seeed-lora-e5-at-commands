@@ -17,6 +17,7 @@ pub mod asynch {
     };
     use atat::asynch::AtatClient;
     use atat::Error;
+    use core::str::FromStr;
     use embedded_io_async::Write;
     use heapless::{String, Vec};
     use serde_at::HexStr;
@@ -75,7 +76,7 @@ pub mod asynch {
             let command = commands::LoraDrGet {};
             let response = self.client.send(&command).await?;
             let s = response.rate.as_str();
-            let s: String<24> = s.into();
+            let s: String<24> = String::from_str(s).map_err(|_| Error::Parse)?;
             Ok(s.into())
         }
 
@@ -83,7 +84,7 @@ pub mod asynch {
             let command = commands::DataRateSchemeSet::region(region);
             let response = self.client.send(&command).await?;
             let s = response.rate.as_str();
-            let s: String<24> = s.into();
+            let s: String<24> = String::from_str(s).map_err(|_| Error::Parse)?;
             Ok(s.into())
         }
 
