@@ -92,7 +92,7 @@ async fn main(spawner: Spawner) {
         &URC_CHANNEL,
     );
     static BUF: StaticCell<[u8; 1024]> = StaticCell::new();
-    let client = Client::new(tx, &RES_SLOT, BUF.init([0; 1024]), atat::Config::default());
+    let client = Client::new(tx, &RES_SLOT, BUF.init([0; 1024]), config);
     unwrap!(spawner.spawn(read_from_pio_uart_task(reader)));
     unwrap!(spawner.spawn(read_task(ingress, rx)));
     unwrap!(spawner.spawn(client_task(client)));

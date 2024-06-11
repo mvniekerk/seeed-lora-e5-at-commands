@@ -18,18 +18,18 @@ keywords = ["at", "lora", "no_std", "seeed", "async"]
 categories = ["embedded", "hardware-support", "network-programming"]
 
 [dependencies]
-atat = { version = "0.22.0", features = ["derive", "bytes", "hex_str_arrays"] }
-atat_derive = "0.22.0"
-serde_at = { version = "0.22.0", features = ["hex_str_arrays", "heapless"] }
+atat = { git = "https://github.com/mvniekerk/atat.git", tag = "v20.2",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
+atat_derive = { git = "https://github.com/mvniekerk/atat.git", tag = "v20.2" }
+serde_at = { git = "https://github.com/mvniekerk/atat.git", tag = "v20.2", default-features=false, features = ["hex_str_arrays"] }
 nb = { version = "1" }
-heapless = "0.8.0"
+heapless = "0.8"
 heapless-bytes = "0.3"
 defmt = { version = "0.3", optional = true }
 embedded-io = { version = "0.6.1", optional = true }
 embedded-io-async = { version = "0.6.1", optional = true }
-embassy-sync = "0.5"
+embassy-sync = "0.5.0"
 
 [features]
 debug = ["atat/defmt", "defmt", "embedded-io-async/defmt-03"]
-async = ["embedded-io", "embedded-io-async"]
+async = ["atat/async", "embedded-io", "embedded-io-async"]
 default = ["debug", "async"]
