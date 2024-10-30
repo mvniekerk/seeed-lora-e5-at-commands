@@ -39,7 +39,7 @@ pub struct DevEuiGet {}
 /// 4.3 OTAA DevEUI Set
 /// Set the OTAA DevEUI
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+ID", OtaaDevEuiResponse)]
+#[at_cmd("+ID", OtaaDevEuiResponse, timeout_ms = 20000)]
 pub struct DevEuiSet {
     pub dev_eui_text: String<12>,
     pub dev_eui: HexStr<u64>,
@@ -387,21 +387,25 @@ pub struct RetrySet {
 /// 4.20 KEY App key set
 /// Set the AppKey for OTAA
 #[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+KEY", AppKeySetResponse)]
+#[at_cmd("+KEY", AppKeySetResponse, timeout_ms = 30000, quote_escape_strings = false)]
 pub struct AppKeySet {
-    pub app_key_text: String<82>,
-    pub key: HexStr<[u8; 16]>,
+    pub app_key_text: String<100>,
 }
 
 impl AppKeySet {
     pub fn app_key(app_key: u128) -> Self {
-        let key = HexStr::<_> {
-            val: app_key.to_le_bytes(),
-            ..Default::default()
-        };
+        let bytes: [u8; 16] = app_key.to_le_bytes();
+        let mut app_key_text = String::new();
+
+        use core::fmt::Write;
+        let _ = write!(
+            &mut app_key_text,
+            "APPKEY, \"{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}\"\r\n",
+            bytes[15], bytes[14], bytes[13], bytes[12], bytes[11], bytes[10], bytes[9], bytes[8], bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]
+        );
+
         Self {
-            app_key_text: "APPKEY".try_into().unwrap(),
-            key,
+            app_key_text
         }
     }
 }

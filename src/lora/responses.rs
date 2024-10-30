@@ -72,7 +72,7 @@ pub struct LoRaWANClassGetSetResponse {
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct AppKeySetResponse {
     // APPKEY <32 char> = 41 char = 82 bytes
-    pub response: String<82>,
+    pub response: String<100>,
 }
 
 /// Join response

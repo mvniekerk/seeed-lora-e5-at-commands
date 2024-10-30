@@ -66,10 +66,9 @@ pub mod asynch {
             Ok(response.app_eui.val)
         }
 
-        pub async fn app_key_set(&mut self, app_key: u128) -> Result<(), Error> {
+        pub async fn app_key_set(&mut self, app_key: u128) -> Result<String<100>, Error> {
             let command = commands::AppKeySet::app_key(app_key);
-            self.client.send(&command).await?;
-            Ok(())
+            self.client.send(&command).await.map(|r| r.response)
         }
 
         pub async fn lora_region(&mut self) -> Result<LoraRegion, Error> {
