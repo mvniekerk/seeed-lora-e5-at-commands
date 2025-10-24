@@ -1,7 +1,7 @@
 [package]
 name = "seeed-lora-e5-at-commands"
-version = "0.1.0"
-edition = "2021"
+version = "0.1.1"
+edition = "2024"
 
 authors = ["Michael van Niekerk <mike@agri-io.co.za>"]
 
@@ -27,7 +27,7 @@ heapless-bytes = "0.3"
 defmt = { version = "0.3", optional = true }
 embedded-io = { version = "0.6.1", optional = true }
 embedded-io-async = { version = "0.6.1", optional = true }
-embassy-sync = "0.5"
+embassy-sync = "0.7"
 
 [features]
 debug = ["atat/defmt", "defmt", "embedded-io-async/defmt-03"]
