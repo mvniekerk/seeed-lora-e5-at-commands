@@ -1,6 +1,6 @@
 [package]
 name = "seeed-lora-e5-at-commands"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2024"
 
 authors = ["Michael van Niekerk <mike@agri-io.co.za>"]
@@ -22,15 +22,13 @@ categories = ["embedded", "hardware-support", "network-programming"]
 atat = { git = "https://github.com/mvniekerk/atat.git", tag = "v20.5",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
 atat_derive = { git = "https://github.com/mvniekerk/atat.git", tag = "v20.5" }
 serde_at = { git = "https://github.com/mvniekerk/atat.git", tag = "v20.5", default-features=false, features = ["hex_str_arrays"] }
-nb = { version = "1" }
 heapless = "0.8.0"
-heapless-bytes = "0.3"
 defmt = { version = "0.3", optional = true }
-embedded-io = { version = "0.6.1", optional = true }
-embedded-io-async = { version = "0.6.1", optional = true }
+embedded-io = { version = "0.7", optional = true }
+embedded-io-async = { version = "0.7", optional = true }
 embassy-sync = "0.7"
 
 [features]
-debug = ["atat/defmt", "defmt", "embedded-io-async/defmt-03"]
+debug = ["atat/defmt", "defmt"]
 async = ["embedded-io", "embedded-io-async"]
 default = ["debug", "async"]
