@@ -1,6 +1,6 @@
 [package]
 name = "seeed-lora-e5-at-commands"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2024"
 
 authors = ["Michael van Niekerk <mike@agri-io.co.za>"]
@@ -19,16 +19,22 @@ categories = ["embedded", "hardware-support", "network-programming"]
 
 [dependencies]
 
-atat = { git = "https://github.com/mvniekerk/atat.git", tag = "v20.6",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
-atat_derive = { git = "https://github.com/mvniekerk/atat.git", tag = "v20.6" }
-serde_at = { git = "https://github.com/mvniekerk/atat.git", tag = "v20.6", default-features=false, features = ["hex_str_arrays"] }
+atat = { git = "https://github.com/mvniekerk/atat.git", tag = "v20.7",  default-features=false, features = ["derive", "bytes", "hex_str_arrays", "async"] }
+atat_derive = { git = "https://github.com/mvniekerk/atat.git", tag = "v20.7" }
+serde_at = { git = "https://github.com/mvniekerk/atat.git", tag = "v20.7", default-features=false, features = ["hex_str_arrays"] }
 heapless = "0.8.0"
 defmt = { version = "0.3", optional = true }
-embedded-io = { version = "0.7", optional = true }
-embedded-io-async = { version = "0.7", optional = true }
+embedded-io = { version = "0.6.1", optional = true }
+embedded-io-async = { version = "0.6.1", optional = true }
 embassy-sync = "0.7"
 
 [features]
 debug = ["atat/defmt", "defmt"]
 async = ["embedded-io", "embedded-io-async"]
 default = ["debug", "async"]
+
+[patch.crates-io]
+embassy-executor = { git = "https://github.com/embassy-rs/embassy", rev = "4bff7cea1a26267ec3671250e954d9d4242fabde" }
+embassy-time = { version = "0.5", git = "https://github.com/embassy-rs/embassy", rev = "4bff7cea1a26267ec3671250e954d9d4242fabde" }
+embassy-sync = { git = "https://github.com/embassy-rs/embassy", rev = "4bff7cea1a26267ec3671250e954d9d4242fabde" }
+embassy-rp = { git = "https://github.com/embassy-rs/embassy", rev = "4bff7cea1a26267ec3671250e954d9d4242fabde" }
