@@ -1,4 +1,3 @@
-#![feature(result_flattening)]
 #![no_std]
 use atat_derive::AtatResp;
 

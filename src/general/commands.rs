@@ -6,7 +6,7 @@ use atat_derive::AtatCmd;
 use core::str::FromStr;
 #[cfg(feature = "debug")]
 use defmt::error;
-use heapless::String;
+use heapless::{String, Vec};
 
 /// 4.1 AT
 /// Used to test if the communication with the device is working
@@ -18,14 +18,13 @@ pub struct VerifyComIsWorking {}
 /// Get the version of the firmware running on the unit
 #[derive(Clone, Debug)]
 pub struct FirmwareVersion {}
-impl AtatCmd for FirmwareVersion {
+impl AtatCmd<8> for FirmwareVersion {
     type Response = VerResponse;
 
-    const MAX_LEN: usize = 8;
-
-    fn write(&self, buf: &mut [u8]) -> usize {
-        buf.copy_from_slice(b"AT+VER\r\n");
-        8
+    fn as_bytes(&self) -> Vec<u8, 8> {
+        let mut buf: Vec<u8, 8> = Vec::new();
+        let _ = buf.extend_from_slice(b"AT+VER\r\n");
+        buf
     }
 
     fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -80,16 +79,17 @@ pub struct Reset {}
 #[derive(Clone, Debug)]
 pub struct FactoryReset {}
 
-impl AtatCmd for FactoryReset {
+impl AtatCmd<20> for FactoryReset {
     type Response = OkResponse;
 
-    const MAX_LEN: usize = 20;
 
     const MAX_TIMEOUT_MS: u32 = 15000;
 
-    fn write(&self, buf: &mut [u8]) -> usize {
-        buf.copy_from_slice(b"+AT+FDEFAULT=Seeed\r\n");
-        20
+    fn as_bytes(&self) -> Vec<u8, 20> {
+        let mut buf: Vec<u8, 20> = Vec::new();
+        let _ = buf.extend_from_slice(b"AT+FDEFAULT\r\n");
+        buf
+
     }
 
     fn parse(&self, _resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {

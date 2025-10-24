@@ -10,8 +10,9 @@ use crate::NoResponse;
 use atat::{AtatCmd, AtatLen, Error, InternalError};
 use atat_derive::{AtatCmd, AtatLen};
 use core::str::FromStr;
-use heapless::String;
+use heapless::{String, Vec};
 use serde_at::{HexStr, SerializeOptions};
+use embedded_io::Write;
 
 /// 4.3 ABP DevAddr Get
 /// Get the ABP mode DevAddr
@@ -124,27 +125,23 @@ pub struct MessageHexUnconfirmed {
     pub message: HexStr<[u8; 242]>,
 }
 
-impl AtatCmd for MessageHexUnconfirmed {
+impl AtatCmd<{MessageHexUnconfirmed::LEN + 20}> for MessageHexUnconfirmed {
     type Response = NoResponse;
-    const MAX_LEN: usize = MessageHexUnconfirmed::LEN + 20;
 
     const EXPECTS_RESPONSE_CODE: bool = false;
 
-    fn write(&self, buf: &mut [u8]) -> usize {
-        let _ = buf.copy_from_slice(b"AT+MSGHEX=");
+    fn as_bytes(&self) -> Vec<u8, { MessageHexUnconfirmed::LEN + 20 }> {
+        let mut ret = Vec::new();
+        let _ = ret.extend_from_slice(b"AT+MSGHEX=");
         let hex_str = serde_at::to_string::<HexStr<[u8; 242]>, { MessageHexUnconfirmed::LEN }>(
             &self.message,
             "",
             SerializeOptions::default(),
         )
         .expect("Failed to serialize message");
-        let len = hex_str.len();
-        let buf = &mut buf[10..];
-        buf[..len].copy_from_slice(hex_str.as_bytes());
-        let end = len + 10;
-        let buf = &mut buf[..end];
-        buf.copy_from_slice(b"\r\n");
-        end + 2
+        let _ = ret.extend_from_slice(&*hex_str.as_bytes());
+        let _ = ret.extend_from_slice(b"\r\n");
+        ret
     }
 
     fn parse(&self, _resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -165,28 +162,24 @@ pub struct MessageHexConfirmed {
     pub message: HexStr<[u8; 242]>,
 }
 
-impl AtatCmd for MessageHexConfirmed {
+impl AtatCmd<{MessageHexConfirmed::LEN + 22}> for MessageHexConfirmed {
     type Response = NoResponse;
-    const MAX_LEN: usize = MessageHexConfirmed::LEN + 22;
 
     const EXPECTS_RESPONSE_CODE: bool = false;
 
-    fn write(&self, buf: &mut [u8]) -> usize {
-        buf.copy_from_slice(b"AT+CMSGHEX=");
-        let buf = &mut buf[11..];
+    fn as_bytes(&self) -> Vec<u8, {MessageHexConfirmed::LEN + 22}> {
+        let mut ret = Vec::new();
+        let _ = ret.extend_from_slice(b"AT+CMSGHEX=");
         let hex_str = serde_at::to_string::<HexStr<[u8; 242]>, { MessageHexConfirmed::LEN }>(
             &self.message,
             "",
             SerializeOptions::default(),
         )
         .expect("Failed to serialize message");
-        let len = hex_str.len();
-        let buf = &mut buf[11..];
-        buf[..len].copy_from_slice(hex_str.as_bytes());
-        let end = len + 11;
-        let buf = &mut buf[..end];
-        buf.copy_from_slice(b"\r\n");
-        end + 2
+
+        let mut buf = ret.as_mut_slice();
+        let _ = write!(buf, "AT+CMSGHEX={}\r\n", hex_str.as_str());
+        ret
     }
 
     fn parse(&self, _resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -338,24 +331,16 @@ impl TxPowerForceSet {
     }
 }
 
-impl AtatCmd for TxPowerForceSet {
+impl AtatCmd<22> for TxPowerForceSet {
     type Response = TxPowerForceSetResponse;
-
-    const MAX_LEN: usize = 22;
 
     const MAX_TIMEOUT_MS: u32 = 30000;
 
-    fn write(&self, mut buf: &mut [u8]) -> usize {
-        use embedded_io::Write;
+    fn as_bytes(&self) -> Vec<u8, 22> {
+        let mut ret = Vec::new();
+        let mut buf = ret.as_mut_slice();
         let _ = write!(buf, "AT+POWER={}, FORCE\r\n", self.db_m);
-        let mut count = 0;
-        for byte in buf.iter() {
-            if *byte == b'\r' {
-                break;
-            }
-            count += 1;
-        }
-        count + 2
+        ret
     }
 
     fn parse(&self, _resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -474,16 +459,16 @@ impl ModeSet {
 /// Join a network using OTAA
 #[derive(Clone, Debug)]
 pub struct LoraJoinOtaa {}
-impl AtatCmd for LoraJoinOtaa {
+impl AtatCmd<9> for LoraJoinOtaa {
     type Response = LoraOtaaJoinResponse;
-
-    const MAX_LEN: usize = 9;
 
     const MAX_TIMEOUT_MS: u32 = 10000;
 
-    fn write(&self, buf: &mut [u8]) -> usize {
-        buf.copy_from_slice(b"AT+JOIN\r\n");
-        9
+    fn as_bytes(&self) -> Vec<u8, 9> {
+        let mut ret = Vec::new();
+        let mut buf = ret.as_mut_slice();
+        let _ = write!(buf, "AT+JOIN\r\n");
+        ret
     }
 
     fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -519,14 +504,14 @@ pub struct LoraJoinOtaaAtDataRate {
 #[derive(Clone, Debug)]
 pub struct LoraAutoJoinOtaaDisable {}
 
-impl AtatCmd for LoraAutoJoinOtaaDisable {
+impl AtatCmd<11> for LoraAutoJoinOtaaDisable {
     type Response = LoraOtaaAutoJoinResponse;
 
-    const MAX_LEN: usize = 11;
-
-    fn write(&self, buf: &mut [u8]) -> usize {
-        buf.copy_from_slice(b"AT+JOIN=0\r\n");
-        11
+    fn as_bytes(&self) -> Vec<u8, 11> {
+        let mut ret = Vec::new();
+        let mut buf = ret.as_mut_slice();
+        let _ = write!(buf, "AT+JOIN=0\r\n");
+        ret
     }
 
     fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -631,14 +616,14 @@ pub struct LoraUplinkDownlinkCounterGet {
     // pub command: String<4>,
 }
 
-impl AtatCmd for LoraUplinkDownlinkCounterGet {
+impl AtatCmd<12> for LoraUplinkDownlinkCounterGet {
     type Response = UplinkDownlinkCounterGetResponse;
 
-    const MAX_LEN: usize = 12;
-
-    fn write(&self, buf: &mut [u8]) -> usize {
-        buf.copy_from_slice(b"AT+LW=ULDL\r\n");
-        12
+    fn as_bytes(&self) -> Vec<u8, 12> {
+        let mut ret = Vec::new();
+        let mut buf = ret.as_mut_slice();
+        let _ = write!(buf, "AT+LW=ULDL\r\n");
+        ret
     }
 
     fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
