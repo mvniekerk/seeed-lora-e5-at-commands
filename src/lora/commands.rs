@@ -82,6 +82,8 @@ impl AtatCmd<{ AppEuiSet::LEN + 20 }> for AppEuiSet {
 
     const EXPECTS_RESPONSE_CODE: bool = true;
 
+    const MAX_TIMEOUT_MS: u32 = 5000;
+
     fn as_bytes(&self) -> Vec<u8, { AppEuiSet::LEN + 20 }> {
         let mut ret = Vec::new();
         let mut buf = ret.as_mut_slice();
@@ -427,6 +429,8 @@ pub struct AppKeySet {
 
 impl AtatCmd<{ AppKeySet::LEN + 20 }> for AppKeySet {
     type Response = AppKeySetResponse;
+
+    const MAX_TIMEOUT_MS: u32 = 5000;
 
     fn as_bytes(&self) -> Vec<u8, { AppKeySet::LEN + 20 }> {
         let mut ret = Vec::new();
