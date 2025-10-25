@@ -169,14 +169,12 @@ impl AtatCmd<{MessageHexConfirmed::LEN + 22}> for MessageHexConfirmed {
 
     fn as_bytes(&self) -> Vec<u8, {MessageHexConfirmed::LEN + 22}> {
         let mut ret = Vec::new();
-        let _ = ret.extend_from_slice(b"AT+CMSGHEX=");
         let hex_str = serde_at::to_string::<HexStr<[u8; 242]>, { MessageHexConfirmed::LEN }>(
             &self.message,
             "",
             SerializeOptions::default(),
         )
         .expect("Failed to serialize message");
-
         let mut buf = ret.as_mut_slice();
         let _ = write!(buf, "AT+CMSGHEX={}\r\n", hex_str.as_str());
         ret

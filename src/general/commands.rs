@@ -87,7 +87,7 @@ impl AtatCmd<20> for FactoryReset {
 
     fn as_bytes(&self) -> Vec<u8, 20> {
         let mut buf: Vec<u8, 20> = Vec::new();
-        let _ = buf.extend_from_slice(b"AT+FDEFAULT\r\n");
+        let _ = buf.extend_from_slice(b"AT+FDEFAULT=Seeed\r\n");
         buf
 
     }
