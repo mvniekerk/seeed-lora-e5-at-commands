@@ -82,14 +82,12 @@ pub struct FactoryReset {}
 impl AtatCmd<20> for FactoryReset {
     type Response = OkResponse;
 
-
     const MAX_TIMEOUT_MS: u32 = 15000;
 
     fn as_bytes(&self) -> Vec<u8, 20> {
         let mut buf: Vec<u8, 20> = Vec::new();
         let _ = buf.extend_from_slice(b"AT+FDEFAULT=Seeed\r\n");
         buf
-
     }
 
     fn parse(&self, _resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {

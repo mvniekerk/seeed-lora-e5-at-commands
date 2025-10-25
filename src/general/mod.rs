@@ -7,8 +7,8 @@ pub mod asynch {
     use crate::client::asynch::SeeedLoraE5Client;
     use crate::general::commands::{FactoryReset, FirmwareVersion, Reset, VerifyComIsWorking};
     use crate::general::responses::VerResponse;
-    use atat::asynch::AtatClient;
     use atat::Error;
+    use atat::asynch::AtatClient;
     #[cfg(feature = "debug")]
     use defmt::error;
     use embedded_io_async::Write;

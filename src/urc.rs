@@ -8,8 +8,8 @@ use crate::lora::urc::{JoinUrc, MessageHexSend, MessageReceived};
 use crate::signal::Signal;
 use atat::digest::ParseError;
 use atat::{
-    nom::{branch, bytes, combinator, sequence},
     AtatUrc, Parser,
+    nom::{branch, bytes, combinator, sequence},
 };
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 

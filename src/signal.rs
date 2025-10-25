@@ -1,11 +1,11 @@
 //! A synchronization primitive for passing the latest value to a task.
 //! Copied over from embassy-sync
 use core::cell::Cell;
-use core::future::{poll_fn, Future};
+use core::future::{Future, poll_fn};
 use core::task::{Context, Poll, Waker};
 
-use embassy_sync::blocking_mutex::raw::RawMutex;
 use embassy_sync::blocking_mutex::Mutex;
+use embassy_sync::blocking_mutex::raw::RawMutex;
 
 /// Single-slot signaling primitive.
 ///

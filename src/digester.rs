@@ -1,13 +1,12 @@
 #[cfg(feature = "debug")]
 use atat::helpers::LossyStr;
 use atat::{
-    digest::{parser, ParseError},
-    InternalError,
+    DigestResult, Digester, Parser, nom,
+    nom::{branch, bytes, combinator, sequence},
 };
 use atat::{
-    nom,
-    nom::{branch, bytes, combinator, sequence},
-    DigestResult, Digester, Parser,
+    InternalError,
+    digest::{ParseError, parser},
 };
 
 #[cfg(feature = "debug")]
@@ -295,7 +294,7 @@ impl Digester for LoraE5Digester {
                 return (
                     DigestResult::Response(Err(InternalError::Custom(response))),
                     len,
-                )
+                );
             }
             Err(ParseError::Incomplete) => return incomplete,
             _ => {}

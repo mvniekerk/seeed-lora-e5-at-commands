@@ -1,10 +1,12 @@
 use crate::lora::types::{LoraJoinMode, LoraJoiningStartingStatus, LoraJoiningStatus};
-use atat_derive::AtatResp;
+use atat::{AtatLen, AtatResp, AtatUrc};
+use atat_derive::{AtatLen, AtatResp};
 use core::str::FromStr;
 #[cfg(feature = "debug")]
 use defmt::error;
 use heapless::{String, Vec};
-use serde_at::HexStr;
+use serde_at::serde::Deserializer;
+use serde_at::{HexStr, serde};
 
 /// MODE Get/Set Response
 #[derive(Debug, Clone, AtatResp, PartialEq)]
@@ -32,9 +34,68 @@ pub struct OtaaDevEuiResponse {
 }
 
 /// ID OTAA AppEui Get/Set Response
-#[derive(Debug, Clone, AtatResp, PartialEq)]
+#[derive(Debug, Clone, PartialEq, AtatLen)]
 pub struct OtaaAppEuiResponse {
     pub app_eui: HexStr<u64>,
+}
+
+impl AtatResp for OtaaAppEuiResponse {}
+impl AtatUrc for OtaaAppEuiResponse {
+    type Response = Self;
+
+    fn parse(resp: &[u8]) -> Option<Self::Response> {
+        let resp = core::str::from_utf8(resp).ok()?;
+        let mut resp = resp.split(' ');
+        let _app_eui_text = resp.next();
+        let app_eui = resp.next()?;
+        let app_eui: HexStr<u64> = serde_at::from_str(app_eui).ok()?;
+        Some(Self { app_eui })
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for OtaaAppEuiResponse {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::<{ OtaaAppEuiResponse::LEN + 20 }>::deserialize(deserializer)?;
+        let s = s.as_bytes();
+        OtaaAppEuiResponse::parse(s).ok_or(serde::de::Error::custom(
+            "Failed to parse OtaaAppEuiResponse",
+        ))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, AtatLen)]
+pub struct AppKeySetResponse {
+    pub app_key: HexStr<u128>,
+}
+
+impl AtatResp for AppKeySetResponse {}
+impl AtatUrc for AppKeySetResponse {
+    type Response = AppKeySetResponse;
+
+    fn parse(resp: &[u8]) -> Option<Self::Response> {
+        let resp = core::str::from_utf8(resp).ok()?;
+        let mut resp = resp.split(',');
+        let _app_key_text = resp.next();
+        let app_key = resp.next()?;
+        let app_key: HexStr<u128> = serde_at::from_str(app_key).ok()?;
+        Some(Self { app_key })
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for AppKeySetResponse {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::<{ AppKeySetResponse::LEN + 20 }>::deserialize(deserializer)?;
+        let s = s.as_bytes();
+        AppKeySetResponse::parse(s).ok_or(serde::de::Error::custom(
+            "Failed to parse AppKeySetResponse",
+        ))
+    }
 }
 
 /// Port get/set response
@@ -66,13 +127,6 @@ pub struct DataRateGetSetResponse {
 #[derive(Debug, Clone, AtatResp, PartialEq)]
 pub struct LoRaWANClassGetSetResponse {
     pub class: String<2>,
-}
-
-/// AppKey Set response
-#[derive(Debug, Clone, AtatResp, PartialEq)]
-pub struct AppKeySetResponse {
-    // APPKEY <32 char> = 41 char = 82 bytes
-    pub response: String<82>,
 }
 
 /// Join response

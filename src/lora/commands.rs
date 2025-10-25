@@ -5,14 +5,14 @@ use super::responses::{
     PortGetSetResponse, RepeatGetSetResponse, RetryGetSetResponse, TxPowerForceSetResponse,
     TxPowerTable, UplinkDownlinkCounterGetResponse,
 };
-use crate::lora::types::{LoraClass, LoraRegion};
 use crate::NoResponse;
-use atat::{AtatCmd, AtatLen, Error, InternalError};
+use crate::lora::types::{LoraClass, LoraRegion};
+use atat::{AtatCmd, AtatLen, AtatUrc, Error, InternalError};
 use atat_derive::{AtatCmd, AtatLen};
 use core::str::FromStr;
+use embedded_io::Write;
 use heapless::{String, Vec};
 use serde_at::{HexStr, SerializeOptions};
-use embedded_io::Write;
 
 /// 4.3 ABP DevAddr Get
 /// Get the ABP mode DevAddr
@@ -77,7 +77,7 @@ pub struct AppEuiSet {
     pub app_eui: HexStr<u64>,
 }
 
-impl AtatCmd<{AppEuiSet::LEN + 20}> for AppEuiSet {
+impl AtatCmd<{ AppEuiSet::LEN + 20 }> for AppEuiSet {
     type Response = OtaaAppEuiResponse;
 
     const EXPECTS_RESPONSE_CODE: bool = true;
@@ -90,24 +90,15 @@ impl AtatCmd<{AppEuiSet::LEN + 20}> for AppEuiSet {
             "",
             SerializeOptions::default(),
         )
-            .expect("Failed to serialize message");
+        .expect("Failed to serialize message");
         let _ = write!(buf, "AT+ID=AppEui, \"{}\"\r\n", hex_str);
         ret
     }
 
     fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
         match resp {
-            Ok(resp) => {
-                let resp = core::str::from_utf8(resp).map_err(|_| Error::Parse)?;
-                let mut resp = resp.split(',');
-                let _app_eui_text = resp.next();
-                let app_eui = resp.next().ok_or(Error::Parse)?;
-                let app_eui: HexStr<u64> = serde_at::from_str(app_eui).map_err(|_| Error::InvalidResponse)?;
-                Ok(Self::Response { app_eui })
-            }
-            Err(e) => {
-                Err(Error::from(e))
-            }
+            Ok(resp) => OtaaAppEuiResponse::parse(resp).ok_or(Error::Parse),
+            Err(e) => Err(Error::from(e)),
         }
     }
 }
@@ -123,7 +114,7 @@ impl AppEuiSet {
             skip_last_0_values: false,
         };
         Self {
-            app_eui_text: String::from_str("AppEui").unwrap(),
+            app_eui_text: String::default(),
             app_eui,
         }
     }
@@ -159,7 +150,7 @@ pub struct MessageHexUnconfirmed {
     pub message: HexStr<[u8; 242]>,
 }
 
-impl AtatCmd<{MessageHexUnconfirmed::LEN + 20}> for MessageHexUnconfirmed {
+impl AtatCmd<{ MessageHexUnconfirmed::LEN + 20 }> for MessageHexUnconfirmed {
     type Response = NoResponse;
 
     const EXPECTS_RESPONSE_CODE: bool = false;
@@ -196,12 +187,12 @@ pub struct MessageHexConfirmed {
     pub message: HexStr<[u8; 242]>,
 }
 
-impl AtatCmd<{MessageHexConfirmed::LEN + 22}> for MessageHexConfirmed {
+impl AtatCmd<{ MessageHexConfirmed::LEN + 22 }> for MessageHexConfirmed {
     type Response = NoResponse;
 
     const EXPECTS_RESPONSE_CODE: bool = false;
 
-    fn as_bytes(&self) -> Vec<u8, {MessageHexConfirmed::LEN + 22}> {
+    fn as_bytes(&self) -> Vec<u8, { MessageHexConfirmed::LEN + 22 }> {
         let mut ret = Vec::new();
         let hex_str = serde_at::to_string::<HexStr<[u8; 242]>, { MessageHexConfirmed::LEN }>(
             &self.message,
@@ -428,18 +419,45 @@ pub struct RetrySet {
 
 /// 4.20 KEY App key set
 /// Set the AppKey for OTAA
-#[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+KEY", AppKeySetResponse)]
+#[derive(Clone, Debug, AtatLen)]
 pub struct AppKeySet {
-    pub app_key_text: String<82>,
-    pub key: HexStr<[u8; 16]>,
+    pub app_key_text: String<6>,
+    pub key: HexStr<u128>,
+}
+
+impl AtatCmd<{ AppKeySet::LEN + 20 }> for AppKeySet {
+    type Response = AppKeySetResponse;
+
+    fn as_bytes(&self) -> Vec<u8, { AppKeySet::LEN + 20 }> {
+        let mut ret = Vec::new();
+        let mut buf = ret.as_mut_slice();
+        let hex_str = serde_at::to_string::<HexStr<u128>, { AppKeySet::LEN }>(
+            &self.key,
+            "",
+            SerializeOptions::default(),
+        )
+        .expect("Failed to serialize message");
+        let _ = write!(buf, "AT+KEY=APPKEY,\"{}\"\r\n", hex_str);
+        ret
+    }
+
+    fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
+        match resp {
+            Ok(resp) => AppKeySetResponse::parse(resp).ok_or(Error::Parse),
+            Err(e) => Err(Error::from(e)),
+        }
+    }
 }
 
 impl AppKeySet {
     pub fn app_key(app_key: u128) -> Self {
-        let key = HexStr::<_> {
-            val: app_key.to_le_bytes(),
-            ..Default::default()
+        let key = HexStr {
+            val: app_key,
+            add_0x_with_encoding: false,
+            hex_in_caps: true,
+            delimiter_after_nibble_count: 2,
+            delimiter: ' ',
+            skip_last_0_values: false,
         };
         Self {
             app_key_text: "APPKEY".try_into().unwrap(),

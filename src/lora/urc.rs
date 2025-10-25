@@ -1,7 +1,7 @@
 use crate::client::asynch::JoinStatus;
 use crate::urc::{
-    MessageStats, ReceivedMessage, URCMessages, LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS,
-    LORA_MESSAGE_RECEIVED_COUNT, LORA_MESSAGE_RECEIVED_STATS,
+    LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT,
+    LORA_MESSAGE_RECEIVED_STATS, MessageStats, ReceivedMessage, URCMessages,
 };
 use atat::digest::ParseError;
 #[cfg(feature = "debug")]

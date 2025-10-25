@@ -5,15 +5,18 @@ pub mod urc;
 
 #[cfg(feature = "async")]
 pub mod asynch {
-    use crate::client::asynch::{debug_command, JoinStatus, SeeedLoraE5Client};
+    use crate::client::asynch::{JoinStatus, SeeedLoraE5Client, debug_command};
     use crate::lora::types::LoraJoinMode;
     use crate::lora::{
         commands,
         types::{LoraClass, LoraJoiningStatus, LoraRegion},
     };
-    use crate::urc::{MessageStats, ReceivedMessage, LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT, LORA_MESSAGE_RECEIVED_STATS};
+    use crate::urc::{
+        LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT,
+        LORA_MESSAGE_RECEIVED_STATS, MessageStats, ReceivedMessage,
+    };
+    use atat::Error;
     use atat::asynch::AtatClient;
-    use atat::{Error};
     use core::str::FromStr;
     use embedded_io_async::Write;
     use heapless::{String, Vec};
