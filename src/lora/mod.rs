@@ -5,18 +5,15 @@ pub mod urc;
 
 #[cfg(feature = "async")]
 pub mod asynch {
-    use crate::client::asynch::{JoinStatus, SeeedLoraE5Client};
+    use crate::client::asynch::{debug_command, JoinStatus, SeeedLoraE5Client};
     use crate::lora::types::LoraJoinMode;
     use crate::lora::{
         commands,
         types::{LoraClass, LoraJoiningStatus, LoraRegion},
     };
-    use crate::urc::{
-        MessageStats, ReceivedMessage, LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS,
-        LORA_MESSAGE_RECEIVED_COUNT, LORA_MESSAGE_RECEIVED_STATS,
-    };
+    use crate::urc::{MessageStats, ReceivedMessage, LAST_LORA_MESSAGE_RECEIVED, LORA_JOIN_STATUS, LORA_MESSAGE_RECEIVED_COUNT, LORA_MESSAGE_RECEIVED_STATS};
     use atat::asynch::AtatClient;
-    use atat::Error;
+    use atat::{Error};
     use core::str::FromStr;
     use embedded_io_async::Write;
     use heapless::{String, Vec};
@@ -27,6 +24,7 @@ pub mod asynch {
     impl<'a, W: Write, const INGRESS_BUF_SIZE: usize> SeeedLoraE5Client<'a, W, INGRESS_BUF_SIZE> {
         pub async fn join_mode(&mut self) -> Result<LoraJoinMode, Error> {
             let command = commands::ModeGet {};
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(LoraJoinMode::from(response))
         }
@@ -38,42 +36,49 @@ pub mod asynch {
                 LoraJoinMode::Test => commands::ModeSet::test(),
                 _ => return Err(Error::Error),
             };
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(response.mode())
         }
 
         pub async fn dev_eui(&mut self) -> Result<u64, Error> {
             let command = commands::DevEuiGet {};
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(response.dev_eui.val)
         }
 
         pub async fn dev_eui_set(&mut self, dev_eui: u64) -> Result<u64, Error> {
             let command = commands::DevEuiSet::dev_eui(dev_eui);
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(response.dev_eui.val)
         }
 
         pub async fn app_eui(&mut self) -> Result<u64, Error> {
             let command = commands::AppEuiGet {};
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(response.app_eui.val)
         }
 
         pub async fn app_eui_set(&mut self, app_eui: u64) -> Result<u64, Error> {
             let command = commands::AppEuiSet::app_eui(app_eui);
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(response.app_eui.val)
         }
 
         pub async fn app_key_set(&mut self, app_key: u128) -> Result<(), Error> {
             let command = commands::AppKeySet::app_key(app_key);
+            debug_command(&command);
             self.client.send(&command).await?;
             Ok(())
         }
 
         pub async fn lora_region(&mut self) -> Result<LoraRegion, Error> {
             let command = commands::LoraDrGet {};
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             let s = response.rate.as_str();
             let s: String<24> = String::from_str(s).map_err(|_| Error::Parse)?;
@@ -82,6 +87,7 @@ pub mod asynch {
 
         pub async fn lora_region_set(&mut self, region: LoraRegion) -> Result<LoraRegion, Error> {
             let command = commands::DataRateSchemeSet::region(region);
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             let s = response.rate.as_str();
             let s: String<24> = String::from_str(s).map_err(|_| Error::Parse)?;
@@ -90,12 +96,14 @@ pub mod asynch {
 
         pub async fn lora_class(&mut self) -> Result<LoraClass, Error> {
             let command = commands::LoraClassGet {};
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(response.class.into())
         }
 
         pub async fn lora_class_set(&mut self, class: LoraClass) -> Result<LoraClass, Error> {
             let command = commands::LoraClassSet::class(class);
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(response.class.into())
         }
@@ -104,6 +112,8 @@ pub mod asynch {
             self.join_status.join_status = JoinStatus::Joining;
             LORA_JOIN_STATUS.signal(JoinStatus::Joining);
             let command = commands::LoraJoinOtaa {};
+            debug_command(&command);
+
             let response = self
                 .client
                 .send(&command)
@@ -143,9 +153,11 @@ pub mod asynch {
         ) -> Result<String<26>, Error> {
             let response = if is_on {
                 let command = commands::LoraAutoJoinOtaaMode0 { interval };
+                debug_command(&command);
                 self.client.send(&command).await?
             } else {
                 let command = commands::LoraAutoJoinOtaaDisable {};
+                debug_command(&command);
                 self.client.send(&command).await?
             };
             Ok(response.response)
@@ -153,6 +165,7 @@ pub mod asynch {
 
         pub async fn max_tx_len(&mut self) -> Result<u8, Error> {
             let command = commands::LoraMaxTxLengthGet::default();
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(response.max)
         }
@@ -197,6 +210,7 @@ pub mod asynch {
                     };
                     let _response = self.client.send(&retry).await?;
                     let command = commands::MessageHexConfirmed { message };
+                    debug_command(&command);
                     let _response = self.client.send(&command).await?;
                     Ok(())
                 }
@@ -206,6 +220,7 @@ pub mod asynch {
                     };
                     let _response = self.client.send(&repeat).await?;
                     let command = commands::MessageHexConfirmed { message };
+                    debug_command(&command);
                     let _response = self.client.send(&command).await?;
                     Ok(())
                 }
@@ -226,24 +241,28 @@ pub mod asynch {
             } else {
                 commands::LoraAdrSet::off()
             };
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(response.is_on())
         }
 
         pub async fn dr_set(&mut self, data_rate: u8) -> Result<u8, Error> {
             let command = commands::LoraDrSet::new(data_rate);
+            debug_command(&command);
             let _response = self.client.send(&command).await?;
             Ok(data_rate)
         }
 
         pub async fn uplink_frame_count(&mut self) -> Result<u32, Error> {
             let command = commands::LoraUplinkDownlinkCounterGet {};
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(response.uplink())
         }
 
         pub async fn downlink_frame_count(&mut self) -> Result<u32, Error> {
             let command = commands::LoraUplinkDownlinkCounterGet {};
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(response.downlink())
         }
@@ -256,12 +275,14 @@ pub mod asynch {
 
         pub async fn tx_power_force_set(&mut self, db_m: u8) -> Result<u8, Error> {
             let command = commands::TxPowerForceSet::new(db_m);
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             Ok(response.db_m)
         }
 
         pub async fn tx_power_table(&mut self) -> Result<Vec<u8, 12>, Error> {
             let command = commands::TxPowerTableGet::default();
+            debug_command(&command);
             let response = self.client.send(&command).await?;
             response.db_m_list()
         }

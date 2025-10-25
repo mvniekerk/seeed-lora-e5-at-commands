@@ -103,15 +103,6 @@ impl LoraE5Digester {
 
     pub fn custom_success(buf: &[u8]) -> Result<(&[u8], usize), ParseError> {
         #[cfg(feature = "debug")]
-        if buf.is_empty() {
-            match LORA_LATEST_BUF.try_write(buf) {
-                Ok(_) => {}
-                Err(_) => {
-                    trace!("Failed to write to LORA_LATEST_BUF");
-                }
-            }
-        }
-        #[cfg(feature = "debug")]
         trace!("Custom success start {:?}", LossyStr(buf));
         let (_reminder, (head, data, tail)) = branch::alt((
             // AT command
@@ -261,9 +252,11 @@ impl LoraE5Digester {
 impl Digester for LoraE5Digester {
     fn digest<'a>(&mut self, input: &'a [u8]) -> (DigestResult<'a>, usize) {
         #[cfg(feature = "debug")]
-        let s = LossyStr(input);
-        #[cfg(feature = "debug")]
-        trace!("Digesting: {:?}", s);
+        {
+            let s = LossyStr(input);
+            trace!("{}", s);
+            let _ = LORA_LATEST_BUF.try_write(input);
+        }
 
         // Incomplete. Eat the echo and do nothing else.
         let incomplete = (DigestResult::None, 0);

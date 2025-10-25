@@ -2,11 +2,28 @@
 pub mod asynch {
     use crate::general::responses::VerResponse;
     pub use atat::asynch::Client;
-    use atat::Error;
+    use atat::{AtatCmd, Error};
+    use atat::nom::AsBytes;
     #[cfg(feature = "debug")]
     use defmt::{error, info, warn};
+    use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+    use embassy_sync::pipe::Pipe;
     pub use embedded_io_async::Write;
     use heapless::String;
+
+    #[cfg(feature = "debug")]
+    pub static LORA_CMD_BUF: Pipe<CriticalSectionRawMutex, 200> = Pipe::new();
+
+    #[cfg(feature = "debug")]
+    pub fn debug_command<Cmd: AtatCmd<LEN>, const LEN: usize>(cmd: &Cmd) {
+        let buf = (&cmd).as_bytes();
+        let _ = LORA_CMD_BUF.try_write(buf.as_bytes());
+    }
+
+    #[cfg(not(feature = "debug"))]
+    pub fn debug_command<Cmd: AtatCmd<LEN>, const LEN: usize>(cmd: &Cmd) {
+        // Nop
+    }
 
     #[derive(Clone, Debug, Copy)]
     pub enum JoinStatus {

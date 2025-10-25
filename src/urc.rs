@@ -55,7 +55,7 @@ pub static LAST_LORA_MESSAGE_SENT: Signal<CriticalSectionRawMutex, MessageStats>
 pub static LORA_JOIN_STATUS: Signal<CriticalSectionRawMutex, JoinStatus> = Signal::new();
 
 #[cfg(feature = "debug")]
-pub static LORA_LATEST_BUF: Pipe<CriticalSectionRawMutex, 50> = Pipe::new();
+pub static LORA_LATEST_BUF: Pipe<CriticalSectionRawMutex, 200> = Pipe::new();
 
 impl URCMessages {}
 
