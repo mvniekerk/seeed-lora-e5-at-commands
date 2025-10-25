@@ -1,3 +1,4 @@
+use core::fmt::Write;
 use super::responses::{
     AbpDevAddrResponse, AdrGetSetResponse, AppKeySetResponse, DataRateGetSetResponse,
     LoRaWANClassGetSetResponse, LoraOtaaAutoJoinResponse, LoraOtaaJoinResponse,
@@ -10,7 +11,7 @@ use crate::lora::types::{LoraClass, LoraRegion};
 use atat::{AtatCmd, AtatLen, AtatUrc, Error, InternalError};
 use atat_derive::{AtatCmd, AtatLen};
 use core::str::FromStr;
-use embedded_io::Write;
+use atat::nom::AsBytes;
 use heapless::{String, Vec};
 use serde_at::{HexStr, SerializeOptions};
 
@@ -80,21 +81,23 @@ pub struct AppEuiSet {
 impl AtatCmd<{ AppEuiSet::LEN + 20 }> for AppEuiSet {
     type Response = OtaaAppEuiResponse;
 
-    const EXPECTS_RESPONSE_CODE: bool = true;
-
     const MAX_TIMEOUT_MS: u32 = 5000;
 
+    const EXPECTS_RESPONSE_CODE: bool = true;
+
     fn as_bytes(&self) -> Vec<u8, { AppEuiSet::LEN + 20 }> {
-        let mut ret = Vec::new();
-        let mut buf = ret.as_mut_slice();
+        let mut buf = String::<{ AppEuiSet::LEN + 20 }>::new();
         let hex_str = serde_at::to_string::<HexStr<u64>, { AppEuiSet::LEN }>(
             &self.app_eui,
             "",
             SerializeOptions::default(),
         )
         .expect("Failed to serialize message");
-        let _ = write!(buf, "AT+ID=AppEui, \"{}\"\r\n", hex_str);
-        ret
+        if let Err(e) = write!(&mut buf, "AT+ID=AppEui, {}\r\n", hex_str) {
+            panic!("Failed to write to buffer: {:?} {} {}", e, AppEuiSet::LEN, hex_str.len());
+        }
+        let buf = buf.as_bytes();
+        Vec::from_slice(&buf).unwrap()
     }
 
     fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -195,16 +198,16 @@ impl AtatCmd<{ MessageHexConfirmed::LEN + 22 }> for MessageHexConfirmed {
     const EXPECTS_RESPONSE_CODE: bool = false;
 
     fn as_bytes(&self) -> Vec<u8, { MessageHexConfirmed::LEN + 22 }> {
-        let mut ret = Vec::new();
+        let mut ret = String::<{ MessageHexConfirmed::LEN + 22 }>::new();
         let hex_str = serde_at::to_string::<HexStr<[u8; 242]>, { MessageHexConfirmed::LEN }>(
             &self.message,
             "",
             SerializeOptions::default(),
         )
         .expect("Failed to serialize message");
-        let mut buf = ret.as_mut_slice();
-        let _ = write!(buf, "AT+CMSGHEX={}\r\n", hex_str.as_str());
-        ret
+        let _ = write!(&mut ret, "AT+CMSGHEX={}\r\n", hex_str.as_str());
+        let ret = ret.as_bytes();
+        ret.into()
     }
 
     fn parse(&self, _resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -362,10 +365,9 @@ impl AtatCmd<22> for TxPowerForceSet {
     const MAX_TIMEOUT_MS: u32 = 30000;
 
     fn as_bytes(&self) -> Vec<u8, 22> {
-        let mut ret = Vec::new();
-        let mut buf = ret.as_mut_slice();
-        let _ = write!(buf, "AT+POWER={}, FORCE\r\n", self.db_m);
-        ret
+        let mut ret = String::<22>::new();
+        let _ = write!(&mut ret, "AT+POWER={}, FORCE\r\n", self.db_m);
+        ret.as_bytes().into()
     }
 
     fn parse(&self, _resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -433,16 +435,15 @@ impl AtatCmd<{ AppKeySet::LEN + 20 }> for AppKeySet {
     const MAX_TIMEOUT_MS: u32 = 5000;
 
     fn as_bytes(&self) -> Vec<u8, { AppKeySet::LEN + 20 }> {
-        let mut ret = Vec::new();
-        let mut buf = ret.as_mut_slice();
+        let mut ret = String::<{ AppKeySet::LEN + 20 }>::new();
         let hex_str = serde_at::to_string::<HexStr<u128>, { AppKeySet::LEN }>(
             &self.key,
             "",
             SerializeOptions::default(),
         )
         .expect("Failed to serialize message");
-        let _ = write!(buf, "AT+KEY=APPKEY,\"{}\"\r\n", hex_str);
-        ret
+        let _ = write!(&mut ret, "AT+KEY=APPKEY, {}\r\n", hex_str);
+        ret.as_bytes().into()
     }
 
     fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -519,10 +520,8 @@ impl AtatCmd<9> for LoraJoinOtaa {
     const MAX_TIMEOUT_MS: u32 = 10000;
 
     fn as_bytes(&self) -> Vec<u8, 9> {
-        let mut ret = Vec::new();
-        let mut buf = ret.as_mut_slice();
-        let _ = write!(buf, "AT+JOIN\r\n");
-        ret
+        let mut ret = String::<9>::from_str("AT+JOIN\r\n").unwrap();
+        ret.as_bytes().into()
     }
 
     fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -562,10 +561,7 @@ impl AtatCmd<11> for LoraAutoJoinOtaaDisable {
     type Response = LoraOtaaAutoJoinResponse;
 
     fn as_bytes(&self) -> Vec<u8, 11> {
-        let mut ret = Vec::new();
-        let mut buf = ret.as_mut_slice();
-        let _ = write!(buf, "AT+JOIN=0\r\n");
-        ret
+        String::from_str("AT+JOIN=0\r\n").unwrap().as_bytes().into()
     }
 
     fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -674,10 +670,7 @@ impl AtatCmd<12> for LoraUplinkDownlinkCounterGet {
     type Response = UplinkDownlinkCounterGetResponse;
 
     fn as_bytes(&self) -> Vec<u8, 12> {
-        let mut ret = Vec::new();
-        let mut buf = ret.as_mut_slice();
-        let _ = write!(buf, "AT+LW=ULDL\r\n");
-        ret
+        String::from_str("AT+LW=ULDL\r\n").unwrap().as_bytes().into()
     }
 
     fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
@@ -711,5 +704,30 @@ impl Default for LoraMaxTxLengthGet {
         Self {
             command: "LEN".try_into().unwrap(),
         }
+    }
+}
+
+
+#[cfg(test)]
+mod test {
+    use atat::AtatCmd;
+    use atat::nom::AsBytes;
+    use heapless::String;
+    use crate::lora::commands::{AppEuiSet, AppKeySet};
+
+    #[test]
+    fn app_eui_set_test() {
+        let v = AppEuiSet::app_eui(0);
+        let b = v.as_bytes();
+        let s = String::<101>::from_utf8(b).unwrap();
+        assert_eq!("AT+ID=AppEui, \"00 00 00 00 00 00 00 00\"\r\n", s.as_str());
+    }
+
+    #[test]
+    fn app_key_set_test() {
+        let v = AppKeySet::app_key(0xe6eedf838d3c4cfa847a0328486c655b);
+        let b = v.as_bytes();
+        let s = String::<159>::from_utf8(b).unwrap();
+        assert_eq!("AT+KEY=APPKEY, \"E6 EE DF 83 8D 3C 4C FA 84 7A 03 28 48 6C 65 5B\"\r\n", s.as_str());
     }
 }

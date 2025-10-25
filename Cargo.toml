@@ -1,6 +1,6 @@
 [package]
 name = "seeed-lora-e5-at-commands"
-version = "0.1.13"
+version = "0.1.14"
 edition = "2024"
 
 authors = ["Michael van Niekerk <mike@agri-io.co.za>"]
