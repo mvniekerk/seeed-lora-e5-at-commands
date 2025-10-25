@@ -15,6 +15,7 @@ use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 
 #[cfg(feature = "debug")]
 use embassy_sync::pipe::Pipe;
+use crate::lora::responses::AppKeySetResponse;
 
 /// URC definitions, needs to passed as generic of [AtDigester](atat::digest::AtDigester): `AtDigester<URCMessages>`
 #[derive(Debug, PartialEq, Clone)]
@@ -27,6 +28,8 @@ pub enum URCMessages {
     MessageHexSend(MessageHexSend),
     /// Message received
     MessageReceived(MessageReceived),
+    /// AppKey updated
+    AppKey(AppKeySetResponse)
 }
 
 pub struct ReceivedMessage {
@@ -73,6 +76,7 @@ impl AtatUrc for URCMessages {
             b if b.starts_with(b"+MSG: ") => MessageReceived::parse(resp)
                 .ok()
                 .map(URCMessages::MessageReceived),
+            b if b.starts_with(b"+KEY: APPKEY ") => AppKeySetResponse::parse(resp).map(URCMessages::AppKey),
             _ => None,
         }
     }

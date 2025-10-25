@@ -432,7 +432,8 @@ pub struct AppKeySet {
 impl AtatCmd<{ AppKeySet::LEN + 20 }> for AppKeySet {
     type Response = AppKeySetResponse;
 
-    const MAX_TIMEOUT_MS: u32 = 5000;
+    const MAX_TIMEOUT_MS: u32 = 0;
+    const EXPECTS_RESPONSE_CODE: bool = true;
 
     fn as_bytes(&self) -> Vec<u8, { AppKeySet::LEN + 20 }> {
         let mut ret = String::<{ AppKeySet::LEN + 20 }>::new();
@@ -460,7 +461,7 @@ impl AppKeySet {
             val: app_key,
             add_0x_with_encoding: false,
             hex_in_caps: true,
-            delimiter_after_nibble_count: 2,
+            delimiter_after_nibble_count: 0,
             delimiter: ' ',
             skip_last_0_values: false,
         };
@@ -711,9 +712,16 @@ impl Default for LoraMaxTxLengthGet {
 #[cfg(test)]
 mod test {
     use atat::AtatCmd;
-    use atat::nom::AsBytes;
     use heapless::String;
-    use crate::lora::commands::{AppEuiSet, AppKeySet};
+    use crate::lora::commands::{AppEuiSet, AppKeySet, LoraAutoJoinOtaaDisable};
+
+    #[test]
+    fn auto_join() {
+        let v = LoraAutoJoinOtaaDisable {};
+        let b = v.as_bytes();
+        let s = String::<11>::from_utf8(b).unwrap();
+        assert_eq!("AT+JOIN=0\r\n", s.as_str());
+    }
 
     #[test]
     fn app_eui_set_test() {
@@ -728,6 +736,6 @@ mod test {
         let v = AppKeySet::app_key(0xe6eedf838d3c4cfa847a0328486c655b);
         let b = v.as_bytes();
         let s = String::<159>::from_utf8(b).unwrap();
-        assert_eq!("AT+KEY=APPKEY, \"E6 EE DF 83 8D 3C 4C FA 84 7A 03 28 48 6C 65 5B\"\r\n", s.as_str());
+        assert_eq!("AT+KEY=APPKEY, \"E6EEDF838D3C4CFA847A0328486C655B\"\r\n", s.as_str());
     }
 }

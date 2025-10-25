@@ -250,12 +250,6 @@ impl LoraE5Digester {
 
 impl Digester for LoraE5Digester {
     fn digest<'a>(&mut self, input: &'a [u8]) -> (DigestResult<'a>, usize) {
-        #[cfg(feature = "debug")]
-        {
-            let s = LossyStr(input);
-            trace!("{}", s);
-            let _ = LORA_LATEST_BUF.try_write(input);
-        }
 
         // Incomplete. Eat the echo and do nothing else.
         let incomplete = (DigestResult::None, 0);
@@ -263,6 +257,13 @@ impl Digester for LoraE5Digester {
         // Stray OK\r\n
         if input == b"OK\r\n" {
             return (DigestResult::None, 4);
+        }
+
+        #[cfg(feature = "debug")]
+        {
+            let s = LossyStr(input);
+            trace!("{}", s);
+            let _ = LORA_LATEST_BUF.try_write(input);
         }
 
         // Generic success replies

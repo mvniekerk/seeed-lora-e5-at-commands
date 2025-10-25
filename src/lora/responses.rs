@@ -2,6 +2,7 @@ use crate::lora::types::{LoraJoinMode, LoraJoiningStartingStatus, LoraJoiningSta
 use atat::{AtatLen, AtatResp, AtatUrc};
 use atat_derive::{AtatLen, AtatResp};
 use core::str::FromStr;
+use atat::nom::{bytes, sequence};
 #[cfg(feature = "debug")]
 use defmt::error;
 use heapless::{String, Vec};
@@ -76,11 +77,8 @@ impl AtatUrc for AppKeySetResponse {
     type Response = AppKeySetResponse;
 
     fn parse(resp: &[u8]) -> Option<Self::Response> {
-        let resp = core::str::from_utf8(resp).ok()?;
-        let mut resp = resp.split(',');
-        let _app_key_text = resp.next();
-        let app_key = resp.next()?;
-        let app_key: HexStr<u128> = serde_at::from_str(app_key).ok()?;
+        let resp = &resp["+KEY: APPKEY ".len()..];
+        let app_key: HexStr<u128> = serde_at::from_slice(resp).ok()?;
         Some(Self { app_key })
     }
 }
@@ -235,5 +233,19 @@ impl UplinkDownlinkCounterGetResponse {
 
     pub fn downlink(&self) -> u32 {
         self.downlink
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use atat::AtatUrc;
+    use crate::lora::responses::{AppKeySetResponse, OtaaAppEuiResponse};
+
+    #[test]
+    pub fn app_key_set_response() {
+        let v = b"+ KEY: APPKEY 2B7E151628AED2A6ABF7158809CF4F3C";
+        let v = AppKeySetResponse::parse(v).unwrap();
+        assert_eq!(0x2B7E151628AED2A6ABF7158809CF4F3C, v.app_key.val);
     }
 }
