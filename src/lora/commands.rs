@@ -71,11 +71,45 @@ pub struct AppEuiGet {}
 
 /// 4.3 OTAA AppEUI Set
 /// Set the OTAA AppEUI
-#[derive(Clone, Debug, AtatCmd)]
-#[at_cmd("+ID", OtaaAppEuiResponse)]
+#[derive(Clone, Debug, AtatLen)]
 pub struct AppEuiSet {
     pub app_eui_text: String<12>,
     pub app_eui: HexStr<u64>,
+}
+
+impl AtatCmd<{AppEuiSet::LEN + 20}> for AppEuiSet {
+    type Response = OtaaAppEuiResponse;
+
+    const EXPECTS_RESPONSE_CODE: bool = true;
+
+    fn as_bytes(&self) -> Vec<u8, { AppEuiSet::LEN + 20 }> {
+        let mut ret = Vec::new();
+        let mut buf = ret.as_mut_slice();
+        let hex_str = serde_at::to_string::<HexStr<u64>, { AppEuiSet::LEN }>(
+            &self.app_eui,
+            "",
+            SerializeOptions::default(),
+        )
+            .expect("Failed to serialize message");
+        let _ = write!(buf, "AT+ID=AppEui, \"{}\"\r\n", hex_str);
+        ret
+    }
+
+    fn parse(&self, resp: Result<&[u8], InternalError>) -> Result<Self::Response, Error> {
+        match resp {
+            Ok(resp) => {
+                let resp = core::str::from_utf8(resp).map_err(|_| Error::Parse)?;
+                let mut resp = resp.split(',');
+                let _app_eui_text = resp.next();
+                let app_eui = resp.next().ok_or(Error::Parse)?;
+                let app_eui: HexStr<u64> = serde_at::from_str(app_eui).map_err(|_| Error::InvalidResponse)?;
+                Ok(Self::Response { app_eui })
+            }
+            Err(e) => {
+                Err(Error::from(e))
+            }
+        }
+    }
 }
 
 impl AppEuiSet {
