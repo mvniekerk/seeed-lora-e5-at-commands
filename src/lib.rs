@@ -1,6 +1,4 @@
 #![no_std]
-extern crate alloc;
-
 use atat_derive::AtatResp;
 
 pub mod client;
