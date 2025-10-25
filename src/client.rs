@@ -37,7 +37,7 @@ pub mod asynch {
     impl<'a, W: Write, const INGRESS_BUF_SIZE: usize> SeeedLoraE5Client<'a, W, INGRESS_BUF_SIZE> {
         pub async fn new(
             client: Client<'a, W, INGRESS_BUF_SIZE>,
-        ) -> Result<SeeedLoraE5Client<'a, W, INGRESS_BUF_SIZE>, Error> {
+        ) -> Result<(SeeedLoraE5Client<'a, W, INGRESS_BUF_SIZE>, VerResponse), Error> {
             let mut s = Self {
                 client,
                 join_status: OtaaJoinStatus {
@@ -89,7 +89,8 @@ pub mod asynch {
                 }
             }
 
-            Ok(s)
+            let version = s.version().await?;
+            Ok((s, version))
         }
     }
 }
